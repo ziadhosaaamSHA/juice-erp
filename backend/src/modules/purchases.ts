@@ -21,7 +21,11 @@ export async function purchasesRoutes(app: FastifyInstance) {
     );
     if (invRes.rowCount === 0) throw new Error("Invoice not found");
     const itemsRes = await pool.query(
-      `SELECT * FROM purchase_invoice_items WHERE purchase_invoice_id = $1`,
+      `SELECT pii.*, i.name as item_name, i.sku, w.name as warehouse_name, w.code as warehouse_code
+       FROM purchase_invoice_items pii
+       LEFT JOIN items i ON i.id = pii.item_id
+       LEFT JOIN warehouses w ON w.id = pii.warehouse_id
+       WHERE pii.purchase_invoice_id = $1`,
       [invoiceId]
     );
     return { data: { invoice: invRes.rows[0], items: itemsRes.rows } };

@@ -858,6 +858,8 @@ const viewFieldLabels = {
     production_date: "تاريخ الإنتاج",
     status: "الحالة",
     notes: "ملاحظات",
+    qty_produced: "الكمية المنتجة",
+    total_cost: "تكلفة الإنتاج",
   },
   vehicle: {
     code: "الكود",
@@ -931,9 +933,9 @@ const viewOrderMap = {
   inventory_summary: ["sku", "name", "unit", "on_hand", "min_stock", "status"],
   inventory_movement: ["movement_date", "item_name", "sku", "warehouse_name", "warehouse_code", "qty", "direction", "unit_cost", "source_type"],
   warehouse: ["code", "name", "is_vehicle"],
-  sales_invoice: ["invoice_no", "customer_name", "invoice_date", "status", "total_amount", "notes"],
-  purchase_invoice: ["invoice_no", "supplier_name", "invoice_date", "status", "total_amount", "notes"],
-  production_order: ["order_no", "production_date", "status", "notes"],
+  sales_invoice: ["invoice_no", "customer_name", "invoice_date", "status", "total_amount", "notes", "items"],
+  purchase_invoice: ["invoice_no", "supplier_name", "invoice_date", "status", "total_amount", "notes", "items"],
+  production_order: ["order_no", "production_date", "qty_produced", "total_cost", "status", "notes"],
   vehicle: ["code", "plate_no", "driver_name", "is_active"],
   customer: ["code", "name", "phone", "address", "credit_limit", "is_active"],
   supplier: ["code", "name", "phone", "address", "is_active"],
@@ -1043,6 +1045,31 @@ function attachViewHandlers(container, dataById) {
       const id = btn.dataset.viewId;
       const title = btn.dataset.viewTitle || "عرض البيانات";
       const type = btn.dataset.viewType || "";
+      if (type === "sales_invoice" || type === "purchase_invoice") {
+        const url =
+          type === "sales_invoice"
+            ? `${apiBase}/sales/invoices/${id}`
+            : `${apiBase}/purchases/invoices/${id}`;
+        fetchJSON(url)
+          .then((res) => {
+            const invoice = res.data?.invoice || {};
+            const items = res.data?.items || [];
+            const details = items.map((item) => {
+              const name = item.item_name || item.sku || item.item_id || "—";
+              const wh = item.warehouse_name || item.warehouse_code || item.warehouse_id || "";
+              const qty = Number(item.qty || 0);
+              const price = Number(item.unit_price || 0);
+              const total = Number(item.line_total || 0);
+              const whText = wh ? ` — ${wh}` : "";
+              return `${name}${whText}: ${num2(qty)} × ${money(price)} = ${money(total)}`;
+            });
+            openViewModal(title, { ...invoice, items: details }, type);
+          })
+          .catch((err) => {
+            toast(`تعذر تحميل تفاصيل الفاتورة: ${err.message || err}`, "error");
+          });
+        return;
+      }
       const data = dataById.get(id);
       openViewModal(title, data, type);
     });
@@ -1340,11 +1367,11 @@ async function loadWarehouses() {
     const viewMap = new Map(warehouses.map((w) => [String(w.id), w]));
     warehouses.forEach((w) => {
       const row = document.createElement("tr");
-      row.dataset.status = w.is_vehicle ? "vehicle" : "main";
+      row.dataset.status = "main";
       row.innerHTML = `
         <td>${w.code}</td>
         <td>${w.name}</td>
-        <td><span class="badge ${w.is_vehicle ? "neutral" : "ok"}">${w.is_vehicle ? "مخزن عربة" : "مخزن رئيسي"}</span></td>
+        <td><span class="badge ok">مخزن</span></td>
         <td>
           <div class="row-actions">
             <button class="icon-btn" title="عرض" data-view-id="${w.id}" data-view-type="warehouse" data-view-title="بيانات المخزن"><i class='bx bx-show'></i></button>
