@@ -46,7 +46,6 @@ export async function distributionRoutes(app: FastifyInstance) {
       itemId: string;
       qty: number;
       sourceWarehouseId: string;
-      vehicleWarehouseId: string;
     };
     const result = await withTx(async (client) => {
       const unitCost = await getWeightedAvgUnitCost(
@@ -60,7 +59,7 @@ export async function distributionRoutes(app: FastifyInstance) {
         `INSERT INTO custody_movements
           (vehicle_id, warehouse_id, item_id, qty, direction, source_type, source_id)
          VALUES ($1, $2, $3, $4, 'load', 'distribution', NULL)`,
-        [body.vehicleId, body.vehicleWarehouseId, body.itemId, body.qty]
+        [body.vehicleId, body.sourceWarehouseId, body.itemId, body.qty]
       );
 
       // 2. Reduce from Source Warehouse (OUT)
@@ -69,14 +68,6 @@ export async function distributionRoutes(app: FastifyInstance) {
           (item_id, warehouse_id, qty, direction, source_type, source_id, unit_cost)
          VALUES ($1, $2, $3, 'out', 'distribution', NULL, $4)`,
         [body.itemId, body.sourceWarehouseId, body.qty, unitCost]
-      );
-
-      // 3. Add to Vehicle Warehouse (IN)
-      await client.query(
-        `INSERT INTO inventory_movements
-          (item_id, warehouse_id, qty, direction, source_type, source_id, unit_cost)
-         VALUES ($1, $2, $3, 'in', 'distribution', NULL, $4)`,
-        [body.itemId, body.vehicleWarehouseId, body.qty, unitCost]
       );
 
       return { ok: true };
@@ -90,7 +81,6 @@ export async function distributionRoutes(app: FastifyInstance) {
       itemId: string;
       qtyReturn: number;
       qtySold: number;
-      vehicleWarehouseId: string;
       mainWarehouseId: string;
     };
 
@@ -100,7 +90,7 @@ export async function distributionRoutes(app: FastifyInstance) {
         const unitCost = await getWeightedAvgUnitCost(
           client,
           body.itemId,
-          body.vehicleWarehouseId
+          body.mainWarehouseId
         );
 
         // Log Custody
@@ -108,18 +98,10 @@ export async function distributionRoutes(app: FastifyInstance) {
           `INSERT INTO custody_movements
             (vehicle_id, warehouse_id, item_id, qty, direction, source_type, source_id)
            VALUES ($1, $2, $3, $4, 'return', 'distribution', NULL)`,
-          [body.vehicleId, body.vehicleWarehouseId, body.itemId, body.qtyReturn]
+          [body.vehicleId, body.mainWarehouseId, body.itemId, body.qtyReturn]
         );
 
-        // Remove from Vehicle (OUT)
-        await client.query(
-          `INSERT INTO inventory_movements
-            (item_id, warehouse_id, qty, direction, source_type, source_id, unit_cost)
-           VALUES ($1, $2, $3, 'out', 'distribution', NULL, $4)`,
-          [body.itemId, body.vehicleWarehouseId, body.qtyReturn, unitCost]
-        );
-
-        // Add to Main Warehouse (IN)
+        // Add to Warehouse (IN)
         await client.query(
           `INSERT INTO inventory_movements
             (item_id, warehouse_id, qty, direction, source_type, source_id, unit_cost)
@@ -130,26 +112,12 @@ export async function distributionRoutes(app: FastifyInstance) {
 
       // Handle Sales
       if (body.qtySold > 0) {
-        const unitCost = await getWeightedAvgUnitCost(
-          client,
-          body.itemId,
-          body.vehicleWarehouseId
-        );
-
         // Log Custody
         await client.query(
           `INSERT INTO custody_movements
             (vehicle_id, warehouse_id, item_id, qty, direction, source_type, source_id)
            VALUES ($1, $2, $3, $4, 'sold', 'distribution', NULL)`,
-          [body.vehicleId, body.vehicleWarehouseId, body.itemId, body.qtySold]
-        );
-
-        // Remove from Vehicle (OUT) - Was missing!
-        await client.query(
-          `INSERT INTO inventory_movements
-            (item_id, warehouse_id, qty, direction, source_type, source_id, unit_cost)
-           VALUES ($1, $2, $3, 'out', 'distribution_sold', NULL, $4)`,
-          [body.itemId, body.vehicleWarehouseId, body.qtySold, unitCost]
+          [body.vehicleId, body.mainWarehouseId, body.itemId, body.qtySold]
         );
       }
 

@@ -717,39 +717,17 @@ function hydrateSelects() {
     allowEmpty: true,
   });
 
+  // Vehicle warehouse selects disabled (single inventory view)
   setSelectOptions($("loadSourceWhSelect"), state.warehouses, {
-    placeholder: "اختر مخزن المصدر",
+    placeholder: "اختر المخزن",
     getLabel: (w) => `${w.code} — ${w.name}`,
     allowEmpty: true,
   });
-  setSelectOptions(
-    $("loadVehicleWhSelect"),
-    state.warehouses.filter((w) => w.is_vehicle),
-    {
-      placeholder: "اختر مخزن العربة",
-      getLabel: (w) => `${w.code} — ${w.name}`,
-      allowEmpty: true,
-    }
-  );
-
-  setSelectOptions(
-    $("settleVehicleWhSelect"),
-    state.warehouses.filter((w) => w.is_vehicle),
-    {
-      placeholder: "اختر مخزن العربة",
-      getLabel: (w) => `${w.code} — ${w.name}`,
-      allowEmpty: true,
-    }
-  );
-  setSelectOptions(
-    $("settleMainWhSelect"),
-    state.warehouses.filter((w) => !w.is_vehicle),
-    {
-      placeholder: "اختر المخزن الرئيسي",
-      getLabel: (w) => `${w.code} — ${w.name}`,
-      allowEmpty: true,
-    }
-  );
+  setSelectOptions($("settleMainWhSelect"), state.warehouses, {
+    placeholder: "اختر المخزن",
+    getLabel: (w) => `${w.code} — ${w.name}`,
+    allowEmpty: true,
+  });
 
   // Teams
   setSelectOptions($("teamRoleSelect"), state.roles, {
@@ -861,6 +839,9 @@ const viewFieldLabels = {
     invoice_date: "تاريخ الفاتورة",
     total_amount: "الإجمالي",
     status: "الحالة",
+    notes: "ملاحظات",
+    customer_id: "العميل (ID)",
+    items: "تفاصيل الأصناف",
   },
   purchase_invoice: {
     invoice_no: "رقم الفاتورة",
@@ -868,6 +849,9 @@ const viewFieldLabels = {
     invoice_date: "تاريخ الفاتورة",
     total_amount: "الإجمالي",
     status: "الحالة",
+    notes: "ملاحظات",
+    supplier_id: "المورد (ID)",
+    items: "تفاصيل الأصناف",
   },
   production_order: {
     order_no: "رقم الأمر",
@@ -947,8 +931,8 @@ const viewOrderMap = {
   inventory_summary: ["sku", "name", "unit", "on_hand", "min_stock", "status"],
   inventory_movement: ["movement_date", "item_name", "sku", "warehouse_name", "warehouse_code", "qty", "direction", "unit_cost", "source_type"],
   warehouse: ["code", "name", "is_vehicle"],
-  sales_invoice: ["invoice_no", "customer_name", "invoice_date", "total_amount", "status"],
-  purchase_invoice: ["invoice_no", "supplier_name", "invoice_date", "total_amount", "status"],
+  sales_invoice: ["invoice_no", "customer_name", "invoice_date", "status", "total_amount", "notes"],
+  purchase_invoice: ["invoice_no", "supplier_name", "invoice_date", "status", "total_amount", "notes"],
   production_order: ["order_no", "production_date", "status", "notes"],
   vehicle: ["code", "plate_no", "driver_name", "is_active"],
   customer: ["code", "name", "phone", "address", "credit_limit", "is_active"],
@@ -1820,6 +1804,8 @@ async function loadProductionOrders() {
       row.innerHTML = `
         <td>${o.order_no}</td>
         <td>${new Date(o.production_date).toLocaleDateString("ar-EG")}</td>
+        <td>${num2(o.qty_produced || 0)}</td>
+        <td>${money(o.total_cost || 0)}</td>
         <td><span class="badge ${isDone ? "success" : "warn"}">${translateStatus(o.status)}</span></td>
         <td>
           <div class="row-actions">
@@ -2933,7 +2919,6 @@ function bindForms() {
           itemId: data.itemId,
           qty: Number(data.qty),
           sourceWarehouseId: data.sourceWarehouseId,
-          vehicleWarehouseId: data.vehicleWarehouseId,
         });
         toast("تم تحميل العربة", "success");
         loadForm.reset();
@@ -2956,7 +2941,6 @@ function bindForms() {
           itemId: data.itemId,
           qtyReturn: Number(data.qtyReturn),
           qtySold: Number(data.qtySold),
-          vehicleWarehouseId: data.vehicleWarehouseId,
           mainWarehouseId: data.mainWarehouseId,
         });
         toast("تمت تسوية العهدة", "success");

@@ -5,7 +5,15 @@ import { createJournalEntry } from "../accountingEngine.js";
 export async function productionRoutes(app: FastifyInstance) {
   app.get("/orders", async () => {
     const res = await pool.query(
-      `SELECT * FROM production_orders ORDER BY production_date DESC`
+      `SELECT po.*,
+        (SELECT COALESCE(SUM(pm.qty_used * pm.unit_cost), 0)
+         FROM production_materials pm
+         WHERE pm.production_order_id = po.id) AS total_cost,
+        (SELECT COALESCE(SUM(po2.qty_produced), 0)
+         FROM production_outputs po2
+         WHERE po2.production_order_id = po.id) AS qty_produced
+       FROM production_orders po
+       ORDER BY po.production_date DESC`
     );
     return { data: res.rows };
   });

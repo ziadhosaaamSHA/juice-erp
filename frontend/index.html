@@ -326,13 +326,47 @@
       <section class="page" data-page="inventory" id="inventory">
         <div class="page-insights" id="inventoryInsights"></div>
         <div class="subtabs">
-          <button class="subtab active" data-subtab="items"><i class='bx bx-box'></i> الأصناف</button>
-          <button class="subtab" data-subtab="stock"><i class='bx bx-layer'></i> المخزون الحالي</button>
+          <button class="subtab active" data-subtab="stock"><i class='bx bx-layer'></i> المخزون الحالي</button>
+          <button class="subtab" data-subtab="items"><i class='bx bx-box'></i> الأصناف</button>
           <button class="subtab" data-subtab="movements"><i class='bx bx-transfer'></i> حركات المخزون</button>
           <button class="subtab" data-subtab="warehouses"><i class='bx bx-building'></i> المخازن</button>
         </div>
 
-        <div class="subtab-panel active" data-subtab-panel="items">
+        <div class="subtab-panel active" data-subtab-panel="stock">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2>المخزون الحالي</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في المخزون الحالي..."
+                  oninput="filterTable(this, 'inventoryBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'inventoryBody')">
+                  <option value="">الكل</option>
+                  <option value="low">منخفض</option>
+                  <option value="ok">آمن</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint section-hint">الحالة تعتمد على مقارنة الكمية المتاحة بالحد الأدنى لكل صنف.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>الوحدة</th>
+                  <th>المتاح</th>
+                  <th>الحد الأدنى</th>
+                  <th>الحالة</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="items">
           <div class="card wide">
             <div class="section-header-actions">
               <div class="search-bar-wrapper">
@@ -368,40 +402,6 @@
                 </tr>
               </thead>
               <tbody id="itemsBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="subtab-panel" data-subtab-panel="stock">
-          <div class="card wide">
-            <div class="section-header-actions">
-              <h2>المخزون الحالي</h2>
-              <div class="search-bar-wrapper">
-                <i class='bx bx-search'></i>
-                <input type="text" class="table-search" placeholder="بحث في المخزون الحالي..."
-                  oninput="filterTable(this, 'inventoryBody')">
-              </div>
-              <div class="filter-group">
-                <select class="select-filter" onchange="filterStatus(this, 'inventoryBody')">
-                  <option value="">الكل</option>
-                  <option value="low">منخفض</option>
-                  <option value="ok">آمن</option>
-                </select>
-              </div>
-            </div>
-            <p class="hint section-hint">الحالة تعتمد على مقارنة الكمية المتاحة بالحد الأدنى لكل صنف.</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>الصنف</th>
-                  <th>الوحدة</th>
-                  <th>المتاح</th>
-                  <th>الحد الأدنى</th>
-                  <th>الحالة</th>
-                  <th>عرض</th>
-                </tr>
-              </thead>
-              <tbody id="inventoryBody"></tbody>
             </table>
           </div>
         </div>
@@ -454,8 +454,7 @@
               <div class="filter-group">
                 <select class="select-filter" onchange="filterStatus(this, 'warehousesBody')">
                   <option value="">الكل</option>
-                  <option value="vehicle">مخزن عربة</option>
-                  <option value="main">مخزن رئيسي</option>
+                  <option value="main">مخزن</option>
                 </select>
               </div>
               <button class="primary" onclick="openModal('modalWarehouse')"><i class='bx bx-plus'></i> إضافة
@@ -506,6 +505,8 @@
               <tr>
                 <th>الرقم</th>
                 <th>التاريخ</th>
+                <th>الكمية المنتجة</th>
+                <th>تكلفة الإنتاج</th>
                 <th>الحالة</th>
                 <th>إجراء</th>
               </tr>
@@ -1081,11 +1082,11 @@
         <input type="text" name="code" required />
         <label>الاسم</label>
         <input type="text" name="name" required />
-        <label>مخزن عربة</label>
+        <!-- <label>مخزن عربة</label>
         <select name="isVehicle">
           <option value="false">لا</option>
           <option value="true">نعم</option>
-        </select>
+        </select> -->
         <button class="primary" type="submit">حفظ</button>
       </form>
     </div>
@@ -1147,7 +1148,7 @@
         <button class="close-modal" onclick="closeModal('modalVehicle')">×</button>
       </div>
       <form class="form" id="vehicleForm">
-        <p class="hint modal-hint">يتم ربط العربة بمخزن مخصص عند التحميل.</p>
+        <p class="hint modal-hint">يتم ربط العربة بالمخزون العام عند التحميل.</p>
         <input type="hidden" name="id" />
         <label>الكود</label>
         <input type="text" name="code" required />
@@ -1167,17 +1168,15 @@
         <button class="close-modal" onclick="closeModal('modalVehicleLoad')">×</button>
       </div>
       <form class="form" id="vehicleLoadForm">
-        <p class="hint modal-hint">يتم خصم الكمية من المخزن الرئيسي وإضافتها لمخزن العربة.</p>
+        <p class="hint modal-hint">يتم خصم الكمية من المخزن المحدد وربطها بالعربة.</p>
         <label>العربة</label>
         <select name="vehicleId" id="loadVehicleSelect" required></select>
         <label>الصنف</label>
         <select name="itemId" id="loadItemSelect" required></select>
         <label>الكمية</label>
         <input type="number" name="qty" required />
-        <label>مخزن المصدر</label>
+        <label>المخزن</label>
         <select name="sourceWarehouseId" id="loadSourceWhSelect" required></select>
-        <label>مخزن العربة</label>
-        <select name="vehicleWarehouseId" id="loadVehicleWhSelect" required></select>
         <button class="primary" type="submit">تحميل</button>
       </form>
     </div>
@@ -1190,7 +1189,7 @@
         <button class="close-modal" onclick="closeModal('modalVehicleSettlement')">×</button>
       </div>
       <form class="form" id="vehicleSettlementForm">
-        <p class="hint modal-hint">المرتجع يعود للمخزن الرئيسي، والمباع يسجَّل كصرف مخزون.</p>
+        <p class="hint modal-hint">المرتجع يعود للمخزن المحدد، والمباع يُسجَّل كعهدة مباعة.</p>
         <label>العربة</label>
         <select name="vehicleId" id="settleVehicleSelect" required></select>
         <label>الصنف</label>
@@ -1199,9 +1198,7 @@
         <input type="number" name="qtyReturn" required />
         <label>كمية مباعة</label>
         <input type="number" name="qtySold" required />
-        <label>مخزن العربة</label>
-        <select name="vehicleWarehouseId" id="settleVehicleWhSelect" required></select>
-        <label>المخزن الرئيسي</label>
+        <label>المخزن</label>
         <select name="mainWarehouseId" id="settleMainWhSelect" required></select>
         <button class="primary" type="submit">تسوية</button>
       </form>
