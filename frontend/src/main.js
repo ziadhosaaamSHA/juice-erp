@@ -1,4 +1,4 @@
-const apiBase = `http://${window.location.hostname}:4000/api/v1`;
+const apiBase = `https://variable-bat-flowa-4508b71a.koyeb.app/api/v1`;
 
 const pageMeta = {
   dashboard: ["لوحة التحكم", "نظرة سريعة على الأداء اليومي للمصنع"],
