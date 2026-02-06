@@ -16,8 +16,16 @@
 
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <div class="brand">عصيرتك</div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-full">عصيرك</span>
+          <span class="brand-mini">ع</span>
+        </div>
+        <button class="icon-btn collapse-btn" id="collapseSidebarBtn" title="تصغير القائمة">
+          <i class='bx bx-chevrons-left'></i>
+        </button>
+      </div>
       <nav class="nav">
         <a class="nav-item active" href="#dashboard" data-page="dashboard"><i class='bx bx-grid-alt'></i><span>لوحة
             التحكم</span></a>
@@ -28,7 +36,8 @@
             class='bx bx-purchase-tag'></i><span>المشتريات</span></a>
         <a class="nav-item" href="#inventory" data-page="inventory"><i class='bx bx-box'></i><span>المخزون</span></a>
         <a class="nav-item" href="#production" data-page="production"><i class='bx bx-cube'></i><span>الإنتاج</span></a>
-        <a class="nav-item" href="#distribution" data-page="distribution"><i class='bx bx-car'></i><span>العهدة</span></a>
+        <a class="nav-item" href="#distribution" data-page="distribution"><i
+            class='bx bx-car'></i><span>العهدة</span></a>
         <a class="nav-item" href="#crm" data-page="crm"><i class='bx bx-user'></i><span>العملاء والموردون</span></a>
         <a class="nav-item" href="#messages" data-page="messages"><i
             class='bx bx-message-square-dots'></i><span>الرسائل</span></a>
@@ -43,12 +52,19 @@
         <!-- Sidebar actions if needed -->
       </div>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <main class="content">
+      <div class="sticky-actions" id="stickyActions"></div>
       <header class="topbar">
-        <div>
-          <h1 id="pageTitle">لوحة التحكم</h1>
-          <p id="pageSubtitle">نظرة سريعة على الأداء اليومي للمصنع</p>
+        <div class="topbar-title">
+          <button class="icon-btn menu-btn" id="menuToggle" aria-label="فتح القائمة">
+            <i class='bx bx-menu'></i>
+          </button>
+          <div>
+            <h1 id="pageTitle">لوحة التحكم</h1>
+            <p id="pageSubtitle">نظرة سريعة على الأداء اليومي للمصنع</p>
+          </div>
         </div>
         <div class="topbar-actions">
           <div class="top-actions">
@@ -56,7 +72,7 @@
             <button class="ghost" id="refreshBtn">تحديث البيانات</button>
             <button class="primary" id="quickActionBtn"><i class='bx bx-zap'></i> إجراء سريع</button>
           </div>
-          <div class="user-actions">
+          <div class="user-actions" id="userActions">
             <div class="notif-menu" id="notifMenu">
               <button class="icon-btn notif-btn" id="notificationsBtn" title="التنبيهات">
                 <i class='bx bx-bell'></i>
@@ -110,11 +126,6 @@
             <span>ديون العملاء</span>
             <strong id="kpiDebt">0</strong>
             <small>حسب إجمالي الفواتير</small>
-          </div>
-          <div class="kpi">
-            <span>آخر نسخة احتياطية</span>
-            <strong id="kpiLastBackup">—</strong>
-            <small id="kpiBackupStatus">لا يوجد سجل بعد</small>
           </div>
         </section>
 
@@ -766,7 +777,8 @@
             <h2><i class='bx bx-upload'></i> استعادة من ملف محلي</h2>
           </div>
           <p class="hint section-hint">يُسمح فقط بملفات SQL الخاصة بالنظام لتجنب تلف البيانات.</p>
-          <button class="primary" onclick="openModal('modalUploadRestore')"><i class='bx bx-cloud-upload'></i> رفع واستعادة النسخة</button>
+          <button class="primary" onclick="openModal('modalUploadRestore')"><i class='bx bx-cloud-upload'></i> رفع
+            واستعادة النسخة</button>
         </div>
         <div class="card wide">
           <div class="section-header-actions">
@@ -1472,7 +1484,8 @@
           <div class="confirm-phrase" id="restorePhrase">استعادة النسخة</div>
         </div>
         <label>اكتب عبارة التأكيد</label>
-        <input type="text" name="confirmText" id="restoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي" required />
+        <input type="text" name="confirmText" id="restoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي"
+          required />
         <label class="checkbox">
           <input type="checkbox" id="ackRestoreRisk" />
           أفهم أن الاستعادة ستستبدل البيانات الحالية بالكامل.
@@ -1498,7 +1511,8 @@
           <div class="confirm-phrase" id="uploadRestorePhrase">استعادة النسخة</div>
         </div>
         <label>اكتب عبارة التأكيد</label>
-        <input type="text" name="confirmText" id="uploadRestoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي" required />
+        <input type="text" name="confirmText" id="uploadRestoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي"
+          required />
         <label class="checkbox">
           <input type="checkbox" id="ackUploadRestoreRisk" />
           أفهم أن هذه العملية ستستبدل بيانات النظام الحالية.

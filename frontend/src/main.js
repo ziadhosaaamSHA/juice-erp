@@ -1,4 +1,4 @@
-const apiBase = "http://localhost:4000/api/v1";
+const apiBase = `http://${window.location.hostname}:4000/api/v1`;
 
 const pageMeta = {
   dashboard: ["لوحة التحكم", "نظرة سريعة على الأداء اليومي للمصنع"],
@@ -384,9 +384,104 @@ function setPage(page) {
   if (menu) menu.classList.remove("open");
   const notifMenu = $("notifMenu");
   if (notifMenu) notifMenu.classList.remove("open");
+  closeSidebar();
 }
 
 window.setPage = setPage;
+
+function openSidebar() {
+  const sidebar = $("sidebar");
+  const overlay = $("sidebarOverlay");
+  if (sidebar) sidebar.classList.add("open");
+  if (overlay) overlay.classList.add("open");
+  document.body.classList.add("no-scroll");
+}
+
+function closeSidebar() {
+  const sidebar = $("sidebar");
+  const overlay = $("sidebarOverlay");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.remove("open");
+  document.body.classList.remove("no-scroll");
+}
+
+function initMobileNav() {
+  const toggle = $("menuToggle");
+  const overlay = $("sidebarOverlay");
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const sidebar = $("sidebar");
+      if (!sidebar) return;
+      if (sidebar.classList.contains("open")) closeSidebar();
+      else openSidebar();
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener("click", closeSidebar);
+  }
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 768) closeSidebar();
+    applySidebarCollapse();
+    syncStickyActions();
+  });
+}
+
+function setSidebarCollapsed(collapsed) {
+  const app = document.querySelector(".app");
+  const sidebar = $("sidebar");
+  const btn = $("collapseSidebarBtn");
+  if (app) app.classList.toggle("sidebar-collapsed", collapsed);
+  if (sidebar) sidebar.classList.toggle("collapsed", collapsed);
+  if (btn) {
+    btn.title = collapsed ? "توسيع القائمة" : "تصغير القائمة";
+  }
+}
+
+function applySidebarCollapse() {
+  const saved = localStorage.getItem("sidebarCollapsed") === "1";
+  if (window.innerWidth <= 768) {
+    setSidebarCollapsed(false);
+  } else {
+    setSidebarCollapsed(saved);
+  }
+}
+
+function initSidebarCollapse() {
+  const btn = $("collapseSidebarBtn");
+  const sidebar = $("sidebar");
+  if (!btn || !sidebar) return;
+  applySidebarCollapse();
+  btn.addEventListener("click", () => {
+    const next = !sidebar.classList.contains("collapsed");
+    setSidebarCollapsed(next);
+    localStorage.setItem("sidebarCollapsed", next ? "1" : "0");
+  });
+}
+
+function syncStickyActions() {
+  const sticky = $("stickyActions");
+  const userActions = $("userActions");
+  const menuToggle = $("menuToggle");
+  const topbarActions = document.querySelector(".topbar-actions");
+  const topbarTitle = document.querySelector(".topbar-title");
+  if (!sticky || !userActions || !menuToggle || !topbarActions || !topbarTitle) return;
+
+  const titleBlock = topbarTitle.querySelector("div");
+  if (window.innerWidth <= 1100) {
+    if (!sticky.contains(menuToggle)) sticky.appendChild(menuToggle);
+    if (!sticky.contains(userActions)) sticky.appendChild(userActions);
+  } else {
+    if (titleBlock && !topbarTitle.contains(menuToggle)) {
+      topbarTitle.insertBefore(menuToggle, titleBlock);
+    }
+    if (!topbarActions.contains(userActions)) {
+      topbarActions.appendChild(userActions);
+    }
+  }
+}
 
 function activateSubtabs(pageSection) {
   if (!pageSection) return;
@@ -420,9 +515,9 @@ function initSubtabs() {
   });
 }
 
-function clampDropdown(dropdown) {
+function clampDropdown(dropdown, baseTransform = "") {
   if (!dropdown) return;
-  dropdown.style.transform = "none";
+  dropdown.style.transform = baseTransform || "none";
   const rect = dropdown.getBoundingClientRect();
   const pad = 12;
   let shiftX = 0;
@@ -433,7 +528,8 @@ function clampDropdown(dropdown) {
     shiftX = pad - rect.left;
   }
   if (shiftX !== 0) {
-    dropdown.style.transform = `translateX(${shiftX}px)`;
+    const extra = `translateX(${shiftX}px)`;
+    dropdown.style.transform = baseTransform ? `${baseTransform} ${extra}` : extra;
   }
 }
 
@@ -969,6 +1065,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         window.location.hash = page;
         setPage(page);
         if (page === "dashboard") loadDashboard();
+        closeSidebar();
       }
     }
   });
@@ -1061,20 +1158,12 @@ async function loadKpis() {
     );
     $("kpiDebt").textContent = money(totalDebt);
 
-    const last = lastBackup.data;
-    if (last) {
-      $("kpiLastBackup").textContent = new Date(last.backup_date).toLocaleDateString("ar-EG");
-      $("kpiBackupStatus").textContent = translateStatus(last.status || "—");
-    } else {
-      $("kpiLastBackup").textContent = "—";
-      $("kpiBackupStatus").textContent = "لا يوجد سجل بعد";
-    }
+
   } catch {
     $("kpiSales").textContent = "—";
     $("kpiCogs").textContent = "—";
     $("kpiStock").textContent = "—";
     $("kpiDebt").textContent = "—";
-    $("kpiLastBackup").textContent = "—";
     $("kpiBackupStatus").textContent = "—";
   }
 }
@@ -2276,6 +2365,10 @@ function bindForms() {
       e.stopPropagation();
       const menu = $("notifMenu");
       if (menu) menu.classList.toggle("open");
+      const dropdown = $("notifDropdown");
+      if (menu && menu.classList.contains("open") && dropdown) {
+        requestAnimationFrame(() => clampDropdown(dropdown, "translateX(-50%)"));
+      }
       loadAlerts();
     });
   }
@@ -3014,9 +3107,17 @@ window.addEventListener("resize", () => {
   if (dropdown && menu && menu.classList.contains("open")) {
     clampDropdown(dropdown);
   }
+  const notifDropdown = $("notifDropdown");
+  const notifMenu = $("notifMenu");
+  if (notifDropdown && notifMenu && notifMenu.classList.contains("open")) {
+    clampDropdown(notifDropdown, "translateX(-50%)");
+  }
 });
 
 setInitialPage();
 bindForms();
 initSubtabs();
+initMobileNav();
+initSidebarCollapse();
+syncStickyActions();
 loadAll();
