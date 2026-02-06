@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-juice_erp}
+      POSTGRES_USER: ${POSTGRES_USER:-juice_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-juice_pass}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://juice_user:juice_pass@db:5432/juice_erp}
+      PORT: ${PORT:-4000}
+      HOST: 0.0.0.0
+      BACKUP_DIR: /tmp/juice_backups
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
