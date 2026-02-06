@@ -1,0 +1,1514 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام مصنع العصائر</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Readex+Pro:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">عصيرتك</div>
+      <nav class="nav">
+        <a class="nav-item active" href="#dashboard" data-page="dashboard"><i class='bx bx-grid-alt'></i><span>لوحة
+            التحكم</span></a>
+        <a class="nav-item" href="#accounting" data-page="accounting"><i
+            class='bx bx-calculator'></i><span>المحاسبة</span></a>
+        <a class="nav-item" href="#sales" data-page="sales"><i class='bx bx-cart'></i><span>المبيعات</span></a>
+        <a class="nav-item" href="#purchases" data-page="purchases"><i
+            class='bx bx-purchase-tag'></i><span>المشتريات</span></a>
+        <a class="nav-item" href="#inventory" data-page="inventory"><i class='bx bx-box'></i><span>المخزون</span></a>
+        <a class="nav-item" href="#production" data-page="production"><i class='bx bx-cube'></i><span>الإنتاج</span></a>
+        <a class="nav-item" href="#distribution" data-page="distribution"><i class='bx bx-car'></i><span>العهدة</span></a>
+        <a class="nav-item" href="#crm" data-page="crm"><i class='bx bx-user'></i><span>العملاء والموردون</span></a>
+        <a class="nav-item" href="#messages" data-page="messages"><i
+            class='bx bx-message-square-dots'></i><span>الرسائل</span></a>
+        <a class="nav-item" href="#reports" data-page="reports"><i
+            class='bx bx-bar-chart-alt-2'></i><span>التقارير</span></a>
+        <a class="nav-item" href="#backup" data-page="backup"><i class='bx bx-cloud-download'></i><span>نسخ
+            احتياطي</span></a>
+        <a class="nav-item" href="#teams" data-page="teams"><i class='bx bx-group'></i><span>فريق العمل</span></a>
+        <a class="nav-item" href="#settings" data-page="settings"><i class='bx bx-cog'></i><span>الإعدادات</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <!-- Sidebar actions if needed -->
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">لوحة التحكم</h1>
+          <p id="pageSubtitle">نظرة سريعة على الأداء اليومي للمصنع</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="top-actions">
+            <button class="ghost" onclick="window.print()"><i class='bx bx-printer'></i> طباعة</button>
+            <button class="ghost" id="refreshBtn">تحديث البيانات</button>
+            <button class="primary" id="quickActionBtn"><i class='bx bx-zap'></i> إجراء سريع</button>
+          </div>
+          <div class="user-actions">
+            <div class="notif-menu" id="notifMenu">
+              <button class="icon-btn notif-btn" id="notificationsBtn" title="التنبيهات">
+                <i class='bx bx-bell'></i>
+                <span class="notif-dot" id="notifDot"></span>
+              </button>
+              <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                  <h4>التنبيهات</h4>
+                  <button class="ghost small" id="openAllAlerts">عرض الكل</button>
+                </div>
+                <div class="alerts-grid" id="notifAlertsList"></div>
+              </div>
+            </div>
+            <div class="profile-menu" id="profileMenu">
+              <button class="profile-btn" id="profileBtn">
+                <span class="avatar">م</span>
+                <div class="profile-meta">
+                  <span class="profile-name">مدير النظام</span>
+                  <span class="profile-role">Admin</span>
+                </div>
+                <i class='bx bx-chevron-down'></i>
+              </button>
+              <div class="profile-dropdown" id="profileDropdown">
+                <button class="profile-item" onclick="setPage('settings')"><i class='bx bx-cog'></i> الإعدادات</button>
+                <button class="profile-item" onclick="setPage('teams')"><i class='bx bx-group'></i> فريق العمل</button>
+                <button class="profile-item danger" id="logoutBtn"><i class='bx bx-log-out'></i> تسجيل الخروج</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="page active" data-page="dashboard">
+        <section class="kpis">
+          <div class="kpi">
+            <span>إجمالي المبيعات</span>
+            <strong id="kpiSales">0</strong>
+            <small>يتم التحديث من التقارير</small>
+          </div>
+          <div class="kpi">
+            <span>تكلفة الإنتاج</span>
+            <strong id="kpiCogs">0</strong>
+            <small>متوسط الوحدة محسوب</small>
+          </div>
+          <div class="kpi">
+            <span>المخزون المتاح</span>
+            <strong id="kpiStock">0</strong>
+            <small>عدد الأصناف المحدثة</small>
+          </div>
+          <div class="kpi">
+            <span>ديون العملاء</span>
+            <strong id="kpiDebt">0</strong>
+            <small>حسب إجمالي الفواتير</small>
+          </div>
+          <div class="kpi">
+            <span>آخر نسخة احتياطية</span>
+            <strong id="kpiLastBackup">—</strong>
+            <small id="kpiBackupStatus">لا يوجد سجل بعد</small>
+          </div>
+        </section>
+
+        <section class="grid">
+          <div class="card">
+            <h2>تنبيهات ذكية</h2>
+            <div class="alerts-grid" id="alertsList">
+              <div class="alert-empty">لا توجد تنبيهات حالياً</div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>أحدث فواتير المبيعات</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم</th>
+                  <th>العميل</th>
+                  <th>الإجمالي</th>
+                  <th>الحالة</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="latestSalesBody">
+                <tr>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td><span class="badge ok">—</span></td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="page" data-page="accounting" id="accounting">
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2>نظرة عامة محاسبية</h2>
+            <div class="top-actions">
+              <button class="primary" onclick="openModal('modalOpeningCapital')"><i class='bx bx-coin-stack'></i> إثبات
+                رأس المال</button>
+            </div>
+          </div>
+          <p class="hint section-hint">إثبات رأس المال ينشئ قيد افتتاحي ويظهر في إجمالي المدين والدائن.</p>
+
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <span>إجمالي المدين</span>
+            <strong id="accTotalDebit">0.00</strong>
+          </div>
+          <div class="kpi">
+            <span>إجمالي الدائن</span>
+            <strong id="accTotalCredit">0.00</strong>
+          </div>
+        </div>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="journal"><i class='bx bx-book-alt'></i> قيود اليومية</button>
+          <button class="subtab" data-subtab="accounts"><i class='bx bx-collection'></i> الدليل المحاسبي</button>
+        </div>
+
+        <div class="subtab-panel active" data-subtab-panel="journal">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-book-alt'></i> قيود اليومية</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في القيود..."
+                  oninput="filterTable(this, 'journalBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'journalBody')">
+                  <option value="">الكل</option>
+                  <option value="sales_invoice">مبيعات</option>
+                  <option value="purchase_invoice">مشتريات</option>
+                  <option value="production">إنتاج</option>
+                  <option value="opening">افتتاحي</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint section-hint">كل عملية مرحّلة تولّد قيدًا يظهر هنا مع الحساب المقابل.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ <i class='bx bx-info-circle info-icon' title="تاريخ القيد"></i></th>
+                  <th>الوصف</th>
+                  <th>الحساب</th>
+                  <th>مدين</th>
+                  <th>دائن</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="journalBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="accounts">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-collection'></i> الدليل المحاسبي</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الدليل..."
+                  oninput="filterTable(this, 'accountsBody')">
+              </div>
+            </div>
+            <p class="hint section-hint">يعرض جميع الحسابات المستخدمة في القيود والعمليات المحاسبية.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>الكود <i class='bx bx-info-circle info-icon' title="كود الحساب في الشجرة"></i></th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="accountsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="sales" id="sales">
+        <div class="page-insights" id="salesInsights"></div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في الفواتير..."
+                oninput="filterTable(this, 'salesInvoicesBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'salesInvoicesBody')">
+                <option value="">الكل</option>
+                <option value="posted">مرحلة</option>
+                <option value="draft">مسودة</option>
+              </select>
+            </div>
+            <button class="primary" onclick="openModal('modalSalesInvoice')">
+              <i class='bx bx-plus'></i> فاتورة جديدة
+            </button>
+          </div>
+          <p class="hint section-hint">ترحيل الفاتورة ينقل القيد للمحاسبة ويحسب تكلفة البضاعة المباعة تلقائيًا.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>العميل</th>
+                <th>الإجمالي</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="salesInvoicesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="purchases" id="purchases">
+        <div class="page-insights" id="purchasesInsights"></div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في المشتريات..."
+                oninput="filterTable(this, 'purchaseInvoicesBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'purchaseInvoicesBody')">
+                <option value="">الكل</option>
+                <option value="posted">مرحلة</option>
+                <option value="draft">مسودة</option>
+              </select>
+            </div>
+            <button class="primary" onclick="openModal('modalPurchaseInvoice')">
+              <i class='bx bx-plus'></i> فاتورة جديدة
+            </button>
+          </div>
+          <p class="hint section-hint">ترحيل فاتورة المشتريات يضيف المخزون تلقائيًا ويثبت القيد المحاسبي.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>المورد</th>
+                <th>الإجمالي</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="purchaseInvoicesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="inventory" id="inventory">
+        <div class="page-insights" id="inventoryInsights"></div>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="items"><i class='bx bx-box'></i> الأصناف</button>
+          <button class="subtab" data-subtab="stock"><i class='bx bx-layer'></i> المخزون الحالي</button>
+          <button class="subtab" data-subtab="movements"><i class='bx bx-transfer'></i> حركات المخزون</button>
+          <button class="subtab" data-subtab="warehouses"><i class='bx bx-building'></i> المخازن</button>
+        </div>
+
+        <div class="subtab-panel active" data-subtab-panel="items">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الأصناف (SKU/الاسم)..."
+                  oninput="filterTable(this, 'itemsBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'itemsBody')">
+                  <option value="">الكل</option>
+                  <option value="raw">خام</option>
+                  <option value="finished">تام</option>
+                </select>
+              </div>
+              <div class="top-actions">
+                <button class="primary" onclick="openModal('modalItem')"><i class='bx bx-plus'></i> إضافة صنف</button>
+                <button class="ghost" onclick="openModal('modalWarehouse')"><i class='bx bx-building'></i> إضافة
+                  مخزن</button>
+              </div>
+            </div>
+            <p class="hint section-hint">إضافة صنف جديد يقوم بتحديث تنبيهات الحد الأدنى تلقائيًا. تعديل الصنف لا يؤثر
+              على الحركات
+              السابقة.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>الوحدة</th>
+                  <th>الحد الأدنى</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="stock">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2>المخزون الحالي</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في المخزون الحالي..."
+                  oninput="filterTable(this, 'inventoryBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'inventoryBody')">
+                  <option value="">الكل</option>
+                  <option value="low">منخفض</option>
+                  <option value="ok">آمن</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint section-hint">الحالة تعتمد على مقارنة الكمية المتاحة بالحد الأدنى لكل صنف.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>الوحدة</th>
+                  <th>المتاح</th>
+                  <th>الحد الأدنى</th>
+                  <th>الحالة</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="movements">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2>حركات المخزون</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الحركات..."
+                  oninput="filterTable(this, 'movementsBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'movementsBody')">
+                  <option value="">الكل</option>
+                  <option value="in">وارد</option>
+                  <option value="out">منصرف</option>
+                  <option value="transfer">تحويل</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint section-hint">تُسجّل الحركات تلقائيًا من المشتريات والإنتاج والمبيعات والتسويات.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>الصنف</th>
+                  <th>المخزن</th>
+                  <th>الكمية</th>
+                  <th>الاتجاه</th>
+                  <th>التكلفة</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="movementsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="warehouses">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2>المخازن</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في المخازن..."
+                  oninput="filterTable(this, 'warehousesBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'warehousesBody')">
+                  <option value="">الكل</option>
+                  <option value="vehicle">مخزن عربة</option>
+                  <option value="main">مخزن رئيسي</option>
+                </select>
+              </div>
+              <button class="primary" onclick="openModal('modalWarehouse')"><i class='bx bx-plus'></i> إضافة
+                مخزن</button>
+            </div>
+            <p class="hint section-hint">تفعيل "مخزن عربة" يجعل المخزن متاحًا لعمليات التحميل والتسوية.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>الكود</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="warehousesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="production" id="production">
+        <div class="page-insights" id="productionInsights"></div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2><i class='bx bx-factory'></i> أوامر الإنتاج</h2>
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في الأوامر..."
+                oninput="filterTable(this, 'productionBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'productionBody')">
+                <option value="">الكل</option>
+                <option value="planned">مخطط</option>
+                <option value="done">مكتمل</option>
+              </select>
+            </div>
+            <div class="top-actions">
+              <button class="primary" onclick="openModal('modalProductionOrder')"><i class='bx bx-plus'></i> أمر
+                جديد</button>
+            </div>
+          </div>
+          <p class="hint section-hint">تنفيذ الأمر ينشئ حركة صرف للمواد الخام وإضافة للمنتج التام مع قيد محاسبي تلقائي.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>التاريخ</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="productionBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="distribution" id="distribution">
+        <div class="page-insights" id="distributionInsights"></div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2><i class='bx bx-truck'></i> العربات</h2>
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في العربات..."
+                oninput="filterTable(this, 'vehiclesBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'vehiclesBody')">
+                <option value="">الكل</option>
+                <option value="active">نشطة</option>
+                <option value="inactive">غير نشطة</option>
+              </select>
+            </div>
+            <div class="top-actions">
+              <button class="primary" onclick="openModal('modalVehicle')"><i class='bx bx-plus'></i> عربة جديدة</button>
+            </div>
+          </div>
+          <p class="hint section-hint">زر التحميل ينقل المخزون لمخزن العربة، وزر التسوية يعيد المرتجع ويسجّل المباع.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>العربة</th>
+                <th>السائق</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="vehiclesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="crm" id="crm">
+        <div class="page-insights" id="crmInsights"></div>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="customers"><i class='bx bx-user'></i> العملاء</button>
+          <button class="subtab" data-subtab="suppliers"><i class='bx bx-store'></i> الموردون</button>
+        </div>
+
+        <div class="subtab-panel active" data-subtab-panel="customers">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-user'></i> العملاء</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في العملاء..."
+                  oninput="filterTable(this, 'customersBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'customersBody')">
+                  <option value="">الكل</option>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+              </div>
+              <button class="primary" onclick="openModal('modalCustomer')"><i class='bx bx-plus'></i> عميل جديد</button>
+            </div>
+            <p class="hint section-hint">تعديل بيانات العميل لا يؤثر على الفواتير السابقة، ويستخدم الحد الائتماني في
+              التنبيهات.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>بيانات</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="suppliers">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-store'></i> الموردون</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الموردين..."
+                  oninput="filterTable(this, 'suppliersBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'suppliersBody')">
+                  <option value="">الكل</option>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+              </div>
+              <button class="primary" onclick="openModal('modalSupplier')"><i class='bx bx-plus'></i> مورد جديد</button>
+            </div>
+            <p class="hint section-hint">يمكن تمييز الموردين غير النشطين لتعطيل التعامل معهم مؤقتًا.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>المورد</th>
+                  <th>الهاتف</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="suppliersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="messages" id="messages">
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2>سجل الرسائل</h2>
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في الرسائل..."
+                oninput="filterTable(this, 'messagesBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'messagesBody')">
+                <option value="">الكل</option>
+                <option value="queued">في الانتظار</option>
+                <option value="sent">تم الإرسال</option>
+                <option value="failed">فشل</option>
+              </select>
+            </div>
+            <div class="top-actions">
+              <button class="ghost" onclick="openModal('modalSms')">SMS</button>
+              <button class="ghost" onclick="openModal('modalWhatsapp')">WhatsApp</button>
+            </div>
+          </div>
+          <p class="hint section-hint">الإرسال هنا يسجل الرسالة في قائمة الإرسال ويُظهر الحالة في السجل.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>القناة</th>
+                <th>المستلم</th>
+                <th>الحالة</th>
+                <th>التاريخ</th>
+                <th>عرض</th>
+              </tr>
+            </thead>
+            <tbody id="messagesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="reports" id="reports">
+        <div class="report-grid">
+          <div class="report-card">
+            <h3>تقرير الأرباح</h3>
+            <p id="profitSummary">—</p>
+          </div>
+          <div class="report-card">
+            <h3>تقرير المخزون</h3>
+            <p id="inventorySummary">—</p>
+          </div>
+          <div class="report-card">
+            <h3>مديونيات العملاء</h3>
+            <p id="debtSummary">—</p>
+          </div>
+          <div class="report-card">
+            <h3>تكلفة الإنتاج</h3>
+            <p id="productionSummary">—</p>
+          </div>
+          <div class="report-card">
+            <h3>تقرير العهدة</h3>
+            <p id="custodySummary">—</p>
+          </div>
+        </div>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="debt"><i class='bx bx-wallet'></i> مديونيات العملاء</button>
+          <button class="subtab" data-subtab="prod"><i class='bx bx-factory'></i> تكلفة الإنتاج</button>
+          <button class="subtab" data-subtab="custody"><i class='bx bx-truck'></i> تقرير العهدة</button>
+        </div>
+
+        <div class="subtab-panel active" data-subtab-panel="debt">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-wallet'></i> مديونيات العملاء</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في المديونيات..."
+                  oninput="filterTable(this, 'reportDebtBody')">
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>الإجمالي</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="reportDebtBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="prod">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-factory'></i> تكلفة الإنتاج</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الإنتاج..."
+                  oninput="filterTable(this, 'reportProductionBody')">
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>الأمر</th>
+                  <th>التكلفة</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="reportProductionBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subtab-panel" data-subtab-panel="custody">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-truck'></i> تقرير العهدة</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في العهدة..."
+                  oninput="filterTable(this, 'reportCustodyBody')">
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>العربة</th>
+                  <th>المحمّل</th>
+                  <th>المرتجع</th>
+                  <th>المباع</th>
+                  <th>عرض</th>
+                </tr>
+              </thead>
+              <tbody id="reportCustodyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="backup" id="backup">
+        <div class="card wide">
+          <h2>النسخ الاحتياطي للنظام</h2>
+          <p>يمكنك تحميل نسخة احتياطية كاملة من قاعدة البيانات.</p>
+          <div style="margin-top: 20px;">
+            <button class="primary large" onclick="downloadBackup()">
+              <i class='bx bx-cloud-download'></i> تحميل نسخة احتياطية
+            </button>
+          </div>
+        </div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2><i class='bx bx-upload'></i> استعادة من ملف محلي</h2>
+          </div>
+          <p class="hint section-hint">يُسمح فقط بملفات SQL الخاصة بالنظام لتجنب تلف البيانات.</p>
+          <button class="primary" onclick="openModal('modalUploadRestore')"><i class='bx bx-cloud-upload'></i> رفع واستعادة النسخة</button>
+        </div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2><i class='bx bx-history'></i> سجل النسخ الاحتياطي</h2>
+            <div class="search-bar-wrapper">
+              <i class='bx bx-search'></i>
+              <input type="text" class="table-search" placeholder="بحث في السجل..."
+                oninput="filterTable(this, 'backupHistoryBody')">
+            </div>
+            <div class="filter-group">
+              <select class="select-filter" onchange="filterStatus(this, 'backupHistoryBody')">
+                <option value="">الكل</option>
+                <option value="completed">مكتمل</option>
+                <option value="failed">فشل</option>
+                <option value="running">قيد التنفيذ</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint section-hint">يظهر هنا سجل عمليات النسخ الاحتياطي مع الحالة والحجم.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>الملف</th>
+                <th>الحجم (MB)</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="backupHistoryBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" data-page="settings" id="settings">
+        <div class="card wide">
+          <h2>الملف الشخصي</h2>
+          <div class="profile-card">
+            <div>
+              <span class="profile-label">اسم المستخدم</span>
+              <strong class="profile-value">مدير النظام (افتراضي)</strong>
+            </div>
+            <div>
+              <span class="profile-label">الدور</span>
+              <strong class="profile-value">Admin</strong>
+            </div>
+            <div>
+              <span class="profile-label">البريد</span>
+              <strong class="profile-value">admin@juice.local</strong>
+            </div>
+          </div>
+          <p class="hint section-hint">سيتم ربط الحسابات والأدوار لاحقًا عند تفعيل نظام الصلاحيات.</p>
+        </div>
+        <div class="card wide">
+          <h2>خيارات سريعة</h2>
+          <div class="settings-actions">
+            <button class="ghost" onclick="setPage('teams')"><i class='bx bx-group'></i> إدارة فريق العمل</button>
+            <button class="danger" id="logoutBtnSettings"><i class='bx bx-log-out'></i> تسجيل الخروج</button>
+          </div>
+          <p class="hint section-hint">تسجيل الخروج سيؤدي لاحقًا إلى إنهاء الجلسة بعد تفعيل نظام الدخول.</p>
+        </div>
+        <div class="card wide danger-card">
+          <div class="section-header-actions">
+            <div>
+              <h2>إعادة تعيين البيانات</h2>
+              <p class="hint">هذه العملية غير قابلة للتراجع. تأكد من تنزيل نسخة احتياطية قبل التنفيذ.</p>
+            </div>
+            <button class="danger" onclick="openModal('modalResetData')"><i class='bx bx-trash'></i> إعادة تعيين
+              البيانات</button>
+          </div>
+          <ul class="reset-steps">
+            <li>اختيار نطاق الإعادة (حركات فقط أو كل البيانات التشغيلية).</li>
+            <li>تأكيد فهمك للمخاطر عبر خانة تأكيد مزدوجة.</li>
+            <li>كتابة عبارة التأكيد كما هي قبل التفعيل.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="page" data-page="teams" id="teams">
+        <div class="page-insights" id="teamsInsights"></div>
+        <div class="card wide">
+          <div class="section-header-actions">
+            <h2><i class='bx bx-group'></i> قوالب أدوار جاهزة</h2>
+            <button class="primary" id="seedRolesBtn"><i class='bx bx-magic-wand'></i> تفعيل القوالب الجاهزة</button>
+          </div>
+          <p class="hint section-hint">تفعيل القوالب ينشئ الأدوار الافتراضية ويضيف حسابات تجريبية لكل دور.</p>
+          <div class="template-grid" id="roleTemplates">
+            <div class="template-card">
+              <h4>مدير النظام</h4>
+              <p>وصول كامل على كل الوحدات والإعدادات.</p>
+            </div>
+            <div class="template-card">
+              <h4>محاسب</h4>
+              <p>المحاسبة + التقارير + ترحيل القيود.</p>
+            </div>
+            <div class="template-card">
+              <h4>أمين مخزن</h4>
+              <p>الأصناف والمخازن والحركات والتنبيهات.</p>
+            </div>
+            <div class="template-card">
+              <h4>مسؤول مبيعات</h4>
+              <p>فواتير المبيعات والعملاء والتحصيلات.</p>
+            </div>
+            <div class="template-card">
+              <h4>مدير إنتاج</h4>
+              <p>أوامر الإنتاج والتكلفة والتحويلات.</p>
+            </div>
+            <div class="template-card">
+              <h4>مشرف توزيع</h4>
+              <p>العهدة والعربات والتسويات.</p>
+            </div>
+          </div>
+        </div>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="users"><i class='bx bx-user-pin'></i> المستخدمون</button>
+          <button class="subtab" data-subtab="roles"><i class='bx bx-shield-quarter'></i> الأدوار والصلاحيات</button>
+        </div>
+        <div class="subtab-panel active" data-subtab-panel="users">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-user-pin'></i> المستخدمون</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في المستخدمين..."
+                  oninput="filterTable(this, 'teamsUsersBody')">
+              </div>
+              <div class="filter-group">
+                <select class="select-filter" onchange="filterStatus(this, 'teamsUsersBody')">
+                  <option value="">الكل</option>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+              </div>
+              <button class="primary" onclick="openModal('modalTeamUser')"><i class='bx bx-user-plus'></i> مستخدم
+                جديد</button>
+            </div>
+            <p class="hint section-hint">إدارة المستخدمين تتحكم في الأدوار المطبقة عند تفعيل نظام الدخول لاحقًا.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>المستخدم</th>
+                  <th>التواصل</th>
+                  <th>الدور</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="teamsUsersBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subtab-panel" data-subtab-panel="roles">
+          <div class="card wide">
+            <div class="section-header-actions">
+              <h2><i class='bx bx-shield-quarter'></i> الأدوار والصلاحيات</h2>
+              <div class="search-bar-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" class="table-search" placeholder="بحث في الأدوار..."
+                  oninput="filterTable(this, 'teamsRolesBody')">
+              </div>
+              <button class="primary" onclick="openModal('modalTeamRole')"><i class='bx bx-plus'></i> دور جديد</button>
+            </div>
+            <p class="hint section-hint">التزم بمبدأ أقل صلاحية لكل دور للحد من المخاطر الأمنية.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>الدور</th>
+                  <th>الوصف</th>
+                  <th>عدد الصلاحيات</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="teamsRolesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOpeningCapital">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إثبات رأس المال</h2>
+        <button class="close-modal" onclick="closeModal('modalOpeningCapital')">×</button>
+      </div>
+      <form class="form" id="openingCapitalForm">
+        <p class="hint modal-hint">سيتم إنشاء قيد افتتاحي في الحسابات عند الترحيل.</p>
+        <label>التاريخ</label>
+        <input type="date" name="entryDate" required />
+        <label>المبلغ</label>
+        <input type="number" name="amount" required />
+        <button class="primary" type="submit">ترحيل</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSalesInvoice">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>فاتورة مبيعات جديدة</h2>
+        <button class="close-modal" onclick="closeModal('modalSalesInvoice')">×</button>
+      </div>
+      <form class="form" id="salesInvoiceForm">
+        <p class="hint modal-hint">حفظ الفاتورة ينشئ مسودة ويمكن ترحيلها لاحقًا من صفحة المبيعات.</p>
+        <label>رقم الفاتورة</label>
+        <input type="text" name="invoiceNo" required />
+        <label>العميل</label>
+        <select name="customerId" id="salesCustomerSelect">
+          <option value="">بدون (بيع نقدي/عام)</option>
+        </select>
+        <label>التاريخ</label>
+        <input type="date" name="invoiceDate" required />
+        <label>الصنف</label>
+        <select name="itemId" id="salesItemSelect" required></select>
+        <label>المخزن</label>
+        <select name="warehouseId" id="salesWarehouseSelect" required></select>
+        <label>الكمية</label>
+        <input type="number" name="qty" required />
+        <label>سعر البيع</label>
+        <input type="number" name="unitPrice" required />
+        <label>ملاحظات (اختياري)</label>
+        <textarea name="notes" rows="3" placeholder="أي تفاصيل إضافية عن الفاتورة..."></textarea>
+        <button class="primary" type="submit">حفظ الفاتورة</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalPurchaseInvoice">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>فاتورة مشتريات جديدة</h2>
+        <button class="close-modal" onclick="closeModal('modalPurchaseInvoice')">×</button>
+      </div>
+      <form class="form" id="purchaseInvoiceForm">
+        <p class="hint modal-hint">بعد الحفظ يمكن ترحيل الفاتورة لإضافة المخزون تلقائيًا.</p>
+        <label>رقم الفاتورة</label>
+        <input type="text" name="invoiceNo" required />
+        <label>المورد</label>
+        <select name="supplierId" id="purchaseSupplierSelect">
+          <option value="">بدون</option>
+        </select>
+        <label>التاريخ</label>
+        <input type="date" name="invoiceDate" required />
+        <label>الصنف</label>
+        <select name="itemId" id="purchaseItemSelect" required></select>
+        <label>المخزن</label>
+        <select name="warehouseId" id="purchaseWarehouseSelect" required></select>
+        <label>الكمية</label>
+        <input type="number" name="qty" required />
+        <label>سعر الشراء</label>
+        <input type="number" name="unitPrice" required />
+        <label>ملاحظات (اختياري)</label>
+        <textarea name="notes" rows="3" placeholder="أي تفاصيل إضافية عن الفاتورة..."></textarea>
+        <button class="primary" type="submit">حفظ الفاتورة</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalItem" data-title-new="إضافة صنف" data-title-edit="تعديل صنف" data-submit-new="حفظ"
+    data-submit-edit="تحديث">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إضافة صنف</h2>
+        <button class="close-modal" onclick="closeModal('modalItem')">×</button>
+      </div>
+      <form class="form" id="itemForm">
+        <p class="hint modal-hint">الحد الأدنى يحدد التنبيهات الذكية للصنف.</p>
+        <input type="hidden" name="id" />
+        <label>الكود (SKU)</label>
+        <input type="text" name="sku" required />
+        <label>الاسم</label>
+        <input type="text" name="name" required />
+        <label>النوع</label>
+        <select name="type">
+          <option value="raw">مواد خام</option>
+          <option value="finished">منتج تام</option>
+        </select>
+        <label>الوحدة</label>
+        <input type="text" name="unit" required />
+        <label>الحد الأدنى</label>
+        <input type="number" name="minStock" />
+        <button class="primary" type="submit">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalWarehouse" data-title-new="إضافة مخزن" data-title-edit="تعديل مخزن"
+    data-submit-new="حفظ" data-submit-edit="تحديث">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إضافة مخزن</h2>
+        <button class="close-modal" onclick="closeModal('modalWarehouse')">×</button>
+      </div>
+      <form class="form" id="warehouseForm">
+        <p class="hint modal-hint">مخزن العربة يظهر في شاشات التحميل والتسوية.</p>
+        <input type="hidden" name="id" />
+        <label>الكود</label>
+        <input type="text" name="code" required />
+        <label>الاسم</label>
+        <input type="text" name="name" required />
+        <label>مخزن عربة</label>
+        <select name="isVehicle">
+          <option value="false">لا</option>
+          <option value="true">نعم</option>
+        </select>
+        <button class="primary" type="submit">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalProductionOrder">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>أمر إنتاج جديد</h2>
+        <button class="close-modal" onclick="closeModal('modalProductionOrder')">×</button>
+      </div>
+      <form class="form" id="productionOrderForm">
+        <p class="hint modal-hint">الأمر يسجل خطة الإنتاج ويمكن تنفيذها لاحقًا من الجدول.</p>
+        <label>رقم الأمر</label>
+        <input type="text" name="orderNo" required />
+        <label>تاريخ الإنتاج</label>
+        <input type="date" name="productionDate" required />
+        <label>مادة خام</label>
+        <select name="materialItemId" id="productionMaterialSelect" required></select>
+        <label>كمية المادة</label>
+        <input type="number" name="materialQty" required />
+        <label>تكلفة الوحدة</label>
+        <input type="number" name="materialUnitCost" required />
+        <label>منتج تام</label>
+        <select name="outputItemId" id="productionOutputSelect" required></select>
+        <label>كمية المنتج</label>
+        <input type="number" name="outputQty" required />
+        <button class="primary" type="submit">حفظ الأمر</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalProductionExecute">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>تنفيذ أمر إنتاج</h2>
+        <button class="close-modal" onclick="closeModal('modalProductionExecute')">×</button>
+      </div>
+      <form class="form" id="productionExecuteForm">
+        <p class="hint modal-hint">التنفيذ يخصم المواد الخام ويضيف المنتج التام مع قيد محاسبي.</p>
+        <label>أمر الإنتاج</label>
+        <select name="orderId" id="executeOrderSelect" required></select>
+        <label>المخزن</label>
+        <select name="warehouseId" id="executeWarehouseSelect" required></select>
+        <label>التاريخ</label>
+        <input type="date" name="entryDate" required />
+        <button class="primary" type="submit">تنفيذ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalVehicle" data-title-new="إضافة عربة" data-title-edit="تعديل عربة"
+    data-submit-new="حفظ" data-submit-edit="تحديث">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إضافة عربة</h2>
+        <button class="close-modal" onclick="closeModal('modalVehicle')">×</button>
+      </div>
+      <form class="form" id="vehicleForm">
+        <p class="hint modal-hint">يتم ربط العربة بمخزن مخصص عند التحميل.</p>
+        <input type="hidden" name="id" />
+        <label>الكود</label>
+        <input type="text" name="code" required />
+        <label>لوحة</label>
+        <input type="text" name="plateNo" required />
+        <label>السائق</label>
+        <input type="text" name="driverName" />
+        <button class="primary" type="submit">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalVehicleLoad">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>تحميل عربة</h2>
+        <button class="close-modal" onclick="closeModal('modalVehicleLoad')">×</button>
+      </div>
+      <form class="form" id="vehicleLoadForm">
+        <p class="hint modal-hint">يتم خصم الكمية من المخزن الرئيسي وإضافتها لمخزن العربة.</p>
+        <label>العربة</label>
+        <select name="vehicleId" id="loadVehicleSelect" required></select>
+        <label>الصنف</label>
+        <select name="itemId" id="loadItemSelect" required></select>
+        <label>الكمية</label>
+        <input type="number" name="qty" required />
+        <label>مخزن المصدر</label>
+        <select name="sourceWarehouseId" id="loadSourceWhSelect" required></select>
+        <label>مخزن العربة</label>
+        <select name="vehicleWarehouseId" id="loadVehicleWhSelect" required></select>
+        <button class="primary" type="submit">تحميل</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalVehicleSettlement">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>تسوية العهدة</h2>
+        <button class="close-modal" onclick="closeModal('modalVehicleSettlement')">×</button>
+      </div>
+      <form class="form" id="vehicleSettlementForm">
+        <p class="hint modal-hint">المرتجع يعود للمخزن الرئيسي، والمباع يسجَّل كصرف مخزون.</p>
+        <label>العربة</label>
+        <select name="vehicleId" id="settleVehicleSelect" required></select>
+        <label>الصنف</label>
+        <select name="itemId" id="settleItemSelect" required></select>
+        <label>كمية مرتجعة</label>
+        <input type="number" name="qtyReturn" required />
+        <label>كمية مباعة</label>
+        <input type="number" name="qtySold" required />
+        <label>مخزن العربة</label>
+        <select name="vehicleWarehouseId" id="settleVehicleWhSelect" required></select>
+        <label>المخزن الرئيسي</label>
+        <select name="mainWarehouseId" id="settleMainWhSelect" required></select>
+        <button class="primary" type="submit">تسوية</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalCustomer" data-title-new="عميل جديد" data-title-edit="تعديل عميل"
+    data-submit-new="حفظ" data-submit-edit="تحديث">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>عميل جديد</h2>
+        <button class="close-modal" onclick="closeModal('modalCustomer')">×</button>
+      </div>
+      <form class="form" id="customerForm">
+        <p class="hint modal-hint">الحد الائتماني يستخدم لقياس مخاطر المديونية والتنبيهات.</p>
+        <input type="hidden" name="id" />
+        <label>الكود</label>
+        <input type="text" name="code" required />
+        <label>الاسم</label>
+        <input type="text" name="name" required />
+        <label>الهاتف</label>
+        <input type="text" name="phone" />
+        <label>العنوان</label>
+        <input type="text" name="address" />
+        <label>الحد الائتماني</label>
+        <input type="number" name="creditLimit" />
+        <button class="primary" type="submit">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSupplier" data-title-new="مورد جديد" data-title-edit="تعديل مورد"
+    data-submit-new="حفظ" data-submit-edit="تحديث">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>مورد جديد</h2>
+        <button class="close-modal" onclick="closeModal('modalSupplier')">×</button>
+      </div>
+      <form class="form" id="supplierForm">
+        <p class="hint modal-hint">تعديل المورد لا يؤثر على الفواتير السابقة.</p>
+        <input type="hidden" name="id" />
+        <label>الكود</label>
+        <input type="text" name="code" required />
+        <label>الاسم</label>
+        <input type="text" name="name" required />
+        <label>الهاتف</label>
+        <input type="text" name="phone" />
+        <label>العنوان</label>
+        <input type="text" name="address" />
+        <button class="primary" type="submit">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSms">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إرسال SMS</h2>
+        <button class="close-modal" onclick="closeModal('modalSms')">×</button>
+      </div>
+      <form class="form" id="smsForm">
+        <p class="hint modal-hint">سيتم تسجيل الرسالة في سجل الرسائل بحالة "في الانتظار".</p>
+        <label>رقم المستلم</label>
+        <input type="text" name="recipient" required />
+        <label>الرسالة</label>
+        <textarea name="body" rows="4" required></textarea>
+        <button class="primary" type="submit">إرسال</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalWhatsapp">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إرسال WhatsApp</h2>
+        <button class="close-modal" onclick="closeModal('modalWhatsapp')">×</button>
+      </div>
+      <form class="form" id="whatsappForm">
+        <p class="hint modal-hint">سيتم تسجيل الرسالة في السجل لعرض الحالة لاحقًا.</p>
+        <label>رقم المستلم</label>
+        <input type="text" name="recipient" required />
+        <label>الرسالة</label>
+        <textarea name="body" rows="4" required></textarea>
+        <button class="primary" type="submit">إرسال</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalQuickAction">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إجراء سريع</h2>
+        <button class="close-modal" onclick="closeModal('modalQuickAction')">×</button>
+      </div>
+      <p class="hint modal-hint">اختر الإجراء لفتح النموذج مباشرة.</p>
+      <div class="list">
+        <button class="nav-item"
+          onclick="setPage('sales'); openModal('modalSalesInvoice'); closeModal('modalQuickAction')">
+          <i class='bx bx-cart-add'></i> فاتورة مبيعات جديدة
+        </button>
+        <button class="nav-item"
+          onclick="setPage('purchases'); openModal('modalPurchaseInvoice'); closeModal('modalQuickAction')">
+          <i class='bx bx-purchase-tag-alt'></i> فاتورة مشتريات جديدة
+        </button>
+        <button class="nav-item"
+          onclick="setPage('production'); openModal('modalProductionOrder'); closeModal('modalQuickAction')">
+          <i class='bx bx-plus-circle'></i> أمر إنتاج جديد
+        </button>
+        <button class="nav-item" onclick="setPage('inventory'); openModal('modalItem'); closeModal('modalQuickAction')">
+          <i class='bx bx-box'></i> إضافة صنف جديد
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalPostSales">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>ترحيل فاتورة مبيعات</h2>
+        <button class="close-modal" onclick="closeModal('modalPostSales')">×</button>
+      </div>
+      <form class="form" id="postSalesForm">
+        <input type="hidden" name="invoiceId" />
+        <p class="hint modal-hint">الترحيل ينشئ قيدًا محاسبيًا ويحسب تكلفة البضاعة المباعة تلقائيًا.</p>
+        <label>تاريخ الترحيل</label>
+        <input type="date" name="entryDate" required />
+        <button class="primary" type="submit">تأكيد الترحيل</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalPostPurchase">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>ترحيل فاتورة مشتريات</h2>
+        <button class="close-modal" onclick="closeModal('modalPostPurchase')">×</button>
+      </div>
+      <form class="form" id="postPurchaseForm">
+        <input type="hidden" name="invoiceId" />
+        <p class="hint modal-hint">الترحيل يثبت المخزون ويظهر القيد في اليومية.</p>
+        <label>تاريخ الترحيل</label>
+        <input type="date" name="entryDate" required />
+        <button class="primary" type="submit">تأكيد الترحيل</button>
+      </form>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>تأكيد الإجراء</h2>
+        <button class="close-modal" onclick="closeModal('modalConfirm')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">هل أنت متأكد من إتمام هذا الإجراء؟</p>
+        <p class="hint modal-hint">يمكنك الإلغاء للعودة بدون أي تغييرات.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="ghost" onclick="closeModal('modalConfirm')">إلغاء</button>
+        <button class="primary" id="confirmActionBtn">تأكيد</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalView">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="viewTitle">عرض البيانات</h2>
+        <button class="close-modal" onclick="closeModal('modalView')">×</button>
+      </div>
+      <div class="modal-body">
+        <table class="view-table">
+          <tbody id="viewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalResetData">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إعادة تعيين البيانات</h2>
+        <button class="close-modal" onclick="closeModal('modalResetData')">×</button>
+      </div>
+      <form class="form" id="resetDataForm">
+        <p class="hint modal-hint">نقترح تنزيل نسخة احتياطية قبل المتابعة.</p>
+        <label>نطاق الإعادة</label>
+        <div class="radio-group">
+          <label class="radio-card">
+            <input type="radio" name="mode" value="transactions" checked />
+            <div>
+              <strong>حركات فقط</strong>
+              <span>يمسح الفواتير والحركات والقيود والتنبيهات مع الإبقاء على الأصناف والعملاء.</span>
+            </div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="mode" value="all" />
+            <div>
+              <strong>كل البيانات التشغيلية</strong>
+              <span>يمسح الحركات والأصناف والعملاء والموردين والمخازن والعربات.</span>
+            </div>
+          </label>
+        </div>
+        <div class="danger-box">
+          <strong>تأكيد إلزامي</strong>
+          <p>اكتب العبارة التالية للتأكيد:</p>
+          <div class="confirm-phrase" id="resetPhrase">إعادة تعيين الحركة</div>
+        </div>
+        <label>اكتب عبارة التأكيد</label>
+        <input type="text" name="confirmText" id="resetConfirmText" placeholder="اكتب عبارة التأكيد كما هي" required />
+        <label class="checkbox">
+          <input type="checkbox" id="ackBackup" />
+          لقد قمت بتنزيل نسخة احتياطية أو قررت المتابعة بدونها.
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="ackIrreversible" />
+          أفهم أن هذه العملية غير قابلة للتراجع.
+        </label>
+        <button class="danger" type="submit" id="resetConfirmBtn" disabled>تأكيد إعادة التعيين</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalTeamRole" data-title-new="إنشاء دور جديد" data-title-edit="تعديل الدور"
+    data-submit-new="حفظ الدور" data-submit-edit="تحديث الدور">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إنشاء دور جديد</h2>
+        <button class="close-modal" onclick="closeModal('modalTeamRole')">×</button>
+      </div>
+      <form class="form" id="teamRoleForm">
+        <p class="hint modal-hint">اختر أقل صلاحيات تحقق الهدف لتقليل المخاطر الأمنية.</p>
+        <input type="hidden" name="id" />
+        <label>اسم الدور</label>
+        <input type="text" name="name" required />
+        <label>الوصف</label>
+        <input type="text" name="description" />
+        <label>الصلاحيات</label>
+        <div class="permissions-grid" id="permissionsGrid"></div>
+        <button class="primary" type="submit">حفظ الدور</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalTeamUser" data-title-new="إنشاء مستخدم" data-title-edit="تعديل المستخدم"
+    data-submit-new="إنشاء المستخدم" data-submit-edit="تحديث المستخدم">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إنشاء مستخدم</h2>
+        <button class="close-modal" onclick="closeModal('modalTeamUser')">×</button>
+      </div>
+      <form class="form" id="teamUserForm">
+        <p class="hint modal-hint">يتم ربط المستخدم بدور واحد مبدئيًا ويمكن تعديله لاحقًا.</p>
+        <input type="hidden" name="id" />
+        <label>الاسم الكامل</label>
+        <input type="text" name="fullName" required />
+        <label>البريد الإلكتروني</label>
+        <input type="email" name="email" required />
+        <label>الهاتف</label>
+        <input type="text" name="phone" />
+        <label>الدور</label>
+        <select name="roleId" id="teamRoleSelect" required></select>
+        <label>الحالة</label>
+        <select name="isActive">
+          <option value="true">نشط</option>
+          <option value="false">غير نشط</option>
+        </select>
+        <button class="primary" type="submit">إنشاء المستخدم</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalRestoreBackup">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>استعادة نسخة احتياطية</h2>
+        <button class="close-modal" onclick="closeModal('modalRestoreBackup')">×</button>
+      </div>
+      <form class="form" id="restoreBackupForm">
+        <input type="hidden" name="backupId" />
+        <p class="hint modal-hint">سيتم استبدال بيانات النظام بالكامل بالنسخة المختارة.</p>
+        <div class="danger-box">
+          <strong>تأكيد إلزامي</strong>
+          <p>اكتب العبارة التالية للتأكيد:</p>
+          <div class="confirm-phrase" id="restorePhrase">استعادة النسخة</div>
+        </div>
+        <label>اكتب عبارة التأكيد</label>
+        <input type="text" name="confirmText" id="restoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي" required />
+        <label class="checkbox">
+          <input type="checkbox" id="ackRestoreRisk" />
+          أفهم أن الاستعادة ستستبدل البيانات الحالية بالكامل.
+        </label>
+        <button class="danger" type="submit" id="restoreConfirmBtn" disabled>تأكيد الاستعادة</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalUploadRestore">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>استعادة من ملف محلي</h2>
+        <button class="close-modal" onclick="closeModal('modalUploadRestore')">×</button>
+      </div>
+      <form class="form" id="uploadRestoreForm">
+        <p class="hint modal-hint">يسمح فقط بملفات SQL الخاصة بالنظام.</p>
+        <label>ملف النسخة (SQL فقط)</label>
+        <input type="file" name="backupFile" id="backupFileInput" accept=".sql" required />
+        <div class="danger-box">
+          <strong>تأكيد إلزامي</strong>
+          <p>اكتب العبارة التالية للتأكيد:</p>
+          <div class="confirm-phrase" id="uploadRestorePhrase">استعادة النسخة</div>
+        </div>
+        <label>اكتب عبارة التأكيد</label>
+        <input type="text" name="confirmText" id="uploadRestoreConfirmText" placeholder="اكتب عبارة التأكيد كما هي" required />
+        <label class="checkbox">
+          <input type="checkbox" id="ackUploadRestoreRisk" />
+          أفهم أن هذه العملية ستستبدل بيانات النظام الحالية.
+        </label>
+        <button class="danger" type="submit" id="uploadRestoreConfirmBtn" disabled>تأكيد الاستعادة</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
