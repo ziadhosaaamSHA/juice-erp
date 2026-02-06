@@ -1037,6 +1037,17 @@ td {
   color: var(--muted);
 }
 
+.readonly-value {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  background: #f9fafb;
+  color: var(--ink);
+}
+
 .permissions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

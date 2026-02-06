@@ -975,7 +975,8 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modalSalesInvoice">
+  <div class="modal-overlay" id="modalSalesInvoice" data-title-new="فاتورة مبيعات جديدة"
+    data-title-edit="تعديل فاتورة مبيعات" data-submit-new="حفظ الفاتورة" data-submit-edit="تحديث الفاتورة">
     <div class="modal">
       <div class="modal-header">
         <h2>فاتورة مبيعات جديدة</h2>
@@ -1006,7 +1007,8 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modalPurchaseInvoice">
+  <div class="modal-overlay" id="modalPurchaseInvoice" data-title-new="فاتورة مشتريات جديدة"
+    data-title-edit="تعديل فاتورة مشتريات" data-submit-new="حفظ الفاتورة" data-submit-edit="تحديث الفاتورة">
     <div class="modal">
       <div class="modal-header">
         <h2>فاتورة مشتريات جديدة</h2>
@@ -1089,7 +1091,8 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modalProductionOrder">
+  <div class="modal-overlay" id="modalProductionOrder" data-title-new="أمر إنتاج جديد"
+    data-title-edit="تعديل أمر إنتاج" data-submit-new="حفظ الأمر" data-submit-edit="تحديث الأمر">
     <div class="modal">
       <div class="modal-header">
         <h2>أمر إنتاج جديد</h2>
@@ -1124,8 +1127,9 @@
       </div>
       <form class="form" id="productionExecuteForm">
         <p class="hint modal-hint">التنفيذ يخصم المواد الخام ويضيف المنتج التام مع قيد محاسبي.</p>
+        <input type="hidden" name="orderId" id="executeOrderId" />
         <label>أمر الإنتاج</label>
-        <select name="orderId" id="executeOrderSelect" required></select>
+        <div class="readonly-value" id="executeOrderNo"></div>
         <label>المخزن</label>
         <select name="warehouseId" id="executeWarehouseSelect" required></select>
         <label>التاريخ</label>
@@ -1322,6 +1326,8 @@
       <form class="form" id="postSalesForm">
         <input type="hidden" name="invoiceId" />
         <p class="hint modal-hint">الترحيل ينشئ قيدًا محاسبيًا ويحسب تكلفة البضاعة المباعة تلقائيًا.</p>
+        <label>رقم الفاتورة</label>
+        <div class="readonly-value" id="postSalesInvoiceNo"></div>
         <label>تاريخ الترحيل</label>
         <input type="date" name="entryDate" required />
         <button class="primary" type="submit">تأكيد الترحيل</button>
@@ -1338,6 +1344,8 @@
       <form class="form" id="postPurchaseForm">
         <input type="hidden" name="invoiceId" />
         <p class="hint modal-hint">الترحيل يثبت المخزون ويظهر القيد في اليومية.</p>
+        <label>رقم الفاتورة</label>
+        <div class="readonly-value" id="postPurchaseInvoiceNo"></div>
         <label>تاريخ الترحيل</label>
         <input type="date" name="entryDate" required />
         <button class="primary" type="submit">تأكيد الترحيل</button>

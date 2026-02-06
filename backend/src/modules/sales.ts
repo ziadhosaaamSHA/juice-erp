@@ -14,6 +14,21 @@ export async function salesRoutes(app: FastifyInstance) {
     return { data: res.rows };
   });
 
+
+  app.get("/invoices/:id", async (req) => {
+    const invoiceId = (req.params as { id: string }).id;
+    const invRes = await pool.query(
+      `SELECT * FROM sales_invoices WHERE id = $1`,
+      [invoiceId]
+    );
+    if (invRes.rowCount === 0) throw new Error("Invoice not found");
+    const itemsRes = await pool.query(
+      `SELECT * FROM sales_invoice_items WHERE sales_invoice_id = $1`,
+      [invoiceId]
+    );
+    return { data: { invoice: invRes.rows[0], items: itemsRes.rows } };
+  });
+
   app.post("/invoices", async (req) => {
     const body = req.body as {
       invoiceNo: string;
@@ -57,6 +72,94 @@ export async function salesRoutes(app: FastifyInstance) {
     });
 
     return { data: result };
+  });
+
+
+  app.put("/invoices/:id", async (req) => {
+    const invoiceId = (req.params as { id: string }).id;
+    const body = req.body as {
+      invoiceNo: string;
+      customerId?: string | null;
+      invoiceDate: string;
+      notes?: string;
+      items: {
+        itemId: string;
+        warehouseId: string;
+        qty: number;
+        unitPrice: number;
+        unitCost?: number;
+      }[];
+    };
+    const totalAmount = body.items.reduce(
+      (sum, item) => sum + item.qty * item.unitPrice,
+      0
+    );
+
+    const result = await withTx(async (client) => {
+      const invRes = await client.query(
+        `SELECT * FROM sales_invoices WHERE id = $1`,
+        [invoiceId]
+      );
+      if (invRes.rowCount === 0) throw new Error("Invoice not found");
+      const invoice = invRes.rows[0];
+      if (invoice.status !== "draft") {
+        throw new Error("Only draft invoices can be edited");
+      }
+
+      await client.query(
+        `UPDATE sales_invoices
+         SET invoice_no = $1, customer_id = $2, invoice_date = $3, total_amount = $4, notes = $5
+         WHERE id = $6`,
+        [body.invoiceNo, body.customerId || null, body.invoiceDate, totalAmount, body.notes || null, invoiceId]
+      );
+
+      await client.query(
+        `DELETE FROM sales_invoice_items WHERE sales_invoice_id = $1`,
+        [invoiceId]
+      );
+
+      for (const line of body.items) {
+        const lineTotal = line.qty * line.unitPrice;
+        await client.query(
+          `INSERT INTO sales_invoice_items
+            (sales_invoice_id, item_id, warehouse_id, qty, unit_price, line_total)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [invoiceId, line.itemId, line.warehouseId, line.qty, line.unitPrice, lineTotal]
+        );
+      }
+
+      const updated = await client.query(
+        `SELECT * FROM sales_invoices WHERE id = $1`,
+        [invoiceId]
+      );
+      return updated.rows[0];
+    });
+
+    return { data: result };
+  });
+
+  app.delete("/invoices/:id", async (req) => {
+    const invoiceId = (req.params as { id: string }).id;
+    await withTx(async (client) => {
+      const invRes = await client.query(
+        `SELECT * FROM sales_invoices WHERE id = $1`,
+        [invoiceId]
+      );
+      if (invRes.rowCount === 0) throw new Error("Invoice not found");
+      const invoice = invRes.rows[0];
+      if (invoice.status !== "draft") {
+        throw new Error("Only draft invoices can be deleted");
+      }
+      await client.query(
+        `DELETE FROM sales_invoice_items WHERE sales_invoice_id = $1`,
+        [invoiceId]
+      );
+      await client.query(
+        `DELETE FROM sales_invoices WHERE id = $1`,
+        [invoiceId]
+      );
+    });
+    return { ok: true };
   });
 
   app.post("/invoices/:id/post", async (req) => {

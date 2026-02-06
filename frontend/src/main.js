@@ -562,6 +562,20 @@ async function postJSON(url, data) {
   });
 }
 
+async function putJSON(url, data) {
+  return fetchJSON(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+async function deleteJSON(url) {
+  return fetchJSON(url, {
+    method: "DELETE",
+  });
+}
+
 async function postForm(url, formData) {
   const res = await fetch(url, {
     method: "POST",
@@ -672,19 +686,14 @@ function hydrateSelects() {
     }
   );
   setSelectOptions(
-    $("executeOrderSelect"),
-    state.productionOrders.filter((o) => o.status !== "done"),
+    $("executeWarehouseSelect"),
+    state.warehouses,
     {
-      placeholder: "اختر أمر إنتاج",
-      getLabel: (o) => `${o.order_no} — ${translateStatus(o.status)}`,
+      placeholder: "اختر المخزن",
+      getLabel: (w) => `${w.code} — ${w.name}`,
       allowEmpty: true,
     }
   );
-  setSelectOptions($("executeWarehouseSelect"), state.warehouses, {
-    placeholder: "اختر المخزن",
-    getLabel: (w) => `${w.code} — ${w.name}`,
-    allowEmpty: true,
-  });
 
   // Distribution
   setSelectOptions($("loadVehicleSelect"), state.vehicles, {
@@ -1054,6 +1063,82 @@ function attachViewHandlers(container, dataById) {
       openViewModal(title, data, type);
     });
   });
+}
+
+async function openSalesEdit(id) {
+  const modal = $("modalSalesInvoice");
+  const form = $("salesInvoiceForm");
+  if (!modal || !form) return;
+  form.dataset.mode = "edit";
+  form.dataset.invoiceId = id;
+  try {
+    const res = await fetchJSON(`${apiBase}/sales/invoices/${id}`);
+    const invoice = res.data?.invoice;
+    const items = res.data?.items || [];
+    const item = items[0] || {};
+    openModal("modalSalesInvoice");
+    form.querySelector("input[name='invoiceNo']").value = invoice?.invoice_no || "";
+    form.querySelector("select[name='customerId']").value = invoice?.customer_id || "";
+    form.querySelector("input[name='invoiceDate']").value = invoice?.invoice_date?.slice(0, 10) || todayISO();
+    form.querySelector("select[name='itemId']").value = item?.item_id || "";
+    form.querySelector("select[name='warehouseId']").value = item?.warehouse_id || "";
+    form.querySelector("input[name='qty']").value = item?.qty || 1;
+    form.querySelector("input[name='unitPrice']").value = item?.unit_price || 0;
+    form.querySelector("textarea[name='notes']").value = invoice?.notes || "";
+  } catch (err) {
+    toast(`تعذر تحميل الفاتورة: ${err.message || err}`, "error");
+  }
+}
+
+async function openPurchaseEdit(id) {
+  const modal = $("modalPurchaseInvoice");
+  const form = $("purchaseInvoiceForm");
+  if (!modal || !form) return;
+  form.dataset.mode = "edit";
+  form.dataset.invoiceId = id;
+  try {
+    const res = await fetchJSON(`${apiBase}/purchases/invoices/${id}`);
+    const invoice = res.data?.invoice;
+    const items = res.data?.items || [];
+    const item = items[0] || {};
+    openModal("modalPurchaseInvoice");
+    form.querySelector("input[name='invoiceNo']").value = invoice?.invoice_no || "";
+    form.querySelector("select[name='supplierId']").value = invoice?.supplier_id || "";
+    form.querySelector("input[name='invoiceDate']").value = invoice?.invoice_date?.slice(0, 10) || todayISO();
+    form.querySelector("select[name='itemId']").value = item?.item_id || "";
+    form.querySelector("select[name='warehouseId']").value = item?.warehouse_id || "";
+    form.querySelector("input[name='qty']").value = item?.qty || 1;
+    form.querySelector("input[name='unitPrice']").value = item?.unit_price || 0;
+    form.querySelector("textarea[name='notes']").value = invoice?.notes || "";
+  } catch (err) {
+    toast(`تعذر تحميل الفاتورة: ${err.message || err}`, "error");
+  }
+}
+
+async function openProductionEdit(id) {
+  const modal = $("modalProductionOrder");
+  const form = $("productionOrderForm");
+  if (!modal || !form) return;
+  form.dataset.mode = "edit";
+  form.dataset.orderId = id;
+  try {
+    const res = await fetchJSON(`${apiBase}/production/orders/${id}`);
+    const order = res.data?.order;
+    const materials = res.data?.materials || [];
+    const outputs = res.data?.outputs || [];
+    const material = materials[0] || {};
+    const output = outputs[0] || {};
+    openModal("modalProductionOrder");
+    form.querySelector("input[name='orderNo']").value = order?.order_no || "";
+    form.querySelector("input[name='productionDate']").value = order?.production_date?.slice(0, 10) || todayISO();
+    form.querySelector("select[name='materialItemId']").value = material?.item_id || "";
+    form.querySelector("input[name='materialQty']").value = material?.qty_used || 1;
+    form.querySelector("input[name='materialUnitCost']").value = material?.unit_cost || 0;
+    form.querySelector("select[name='outputItemId']").value = output?.item_id || "";
+    form.querySelector("input[name='outputQty']").value = output?.qty_produced || 1;
+  } catch (err) {
+    toast(`تعذر تحميل أمر الإنتاج: ${err.message || err}`, "error");
+  }
 }
 
 document.querySelectorAll(".nav-item").forEach((item) => {
@@ -1519,11 +1604,12 @@ async function loadSalesInvoices() {
       const row = document.createElement("tr");
       row.dataset.status = inv.status || "";
       const isPosted = inv.status === "posted";
+      const isDraft = inv.status === "draft";
       row.innerHTML = `
         <td>
           <div class="data-cell">
             <span class="data-main">#${inv.invoice_no}</span>
-            <span class="data-info"><i class='bx bx-calendar'></i> ${inv.invoice_date}</span>
+            <span class="data-info"><i class='bx bx-calendar'></i> ${new Date(inv.invoice_date).toLocaleDateString("ar-EG")}</span>
           </div>
         </td>
         <td>${inv.customer_name || "—"}</td>
@@ -1532,6 +1618,8 @@ async function loadSalesInvoices() {
         <td>
           <div class="row-actions">
             <button class="icon-btn" title="عرض" data-view-id="${inv.id}" data-view-type="sales_invoice" data-view-title="بيانات الفاتورة"><i class='bx bx-show'></i></button>
+            <button class="icon-btn" title="تعديل" data-edit-sales="${inv.id}" ${isDraft ? "" : "disabled"}><i class='bx bx-edit-alt'></i></button>
+            <button class="icon-btn" title="حذف" data-delete-sales="${inv.id}" ${isDraft ? "" : "disabled"}><i class='bx bx-trash'></i></button>
             <button class="icon-btn" title="ترحيل" data-post-sales="${inv.id}" data-entry-date="${inv.invoice_date}" ${isPosted ? "disabled" : ""}>
               <i class='bx ${isPosted ? "bx-check-circle" : "bx-check-double"}'></i>
             </button>
@@ -1560,8 +1648,39 @@ async function loadSalesInvoices() {
           form.querySelector("input[name='invoiceId']").value = id;
           const dateInput = form.querySelector("input[name='entryDate']");
           if (dateInput) dateInput.value = btn.dataset.entryDate || todayISO();
+          const label = $("postSalesInvoiceNo");
+          if (label) {
+            const code = btn.closest("tr")?.querySelector(".data-main")?.textContent || "";
+            label.textContent = code ? `#${code.replace("#", "").trim()}` : "";
+          }
           window.openModal("modalPostSales");
         }
+      });
+    });
+
+    body.querySelectorAll("[data-edit-sales]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.editSales;
+        if (!id) return;
+        await openSalesEdit(id);
+      });
+    });
+
+    body.querySelectorAll("[data-delete-sales]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.deleteSales;
+        if (!id) return;
+        openConfirmModal("حذف فاتورة المبيعات؟ سيتم حذف المسودة نهائيًا.", async () => {
+          try {
+            await deleteJSON(`${apiBase}/sales/invoices/${id}`);
+            toast("تم حذف الفاتورة", "success");
+            await Promise.all([loadSalesInvoices(), loadLatestSales(), loadKpis(), loadReports()]);
+          } catch (err) {
+            toast(`تعذر الحذف: ${err.message || err}`, "error");
+          }
+        });
       });
     });
 
@@ -1591,11 +1710,12 @@ async function loadPurchaseInvoices() {
       const row = document.createElement("tr");
       row.dataset.status = inv.status || "";
       const isPosted = inv.status === "posted";
+      const isDraft = inv.status === "draft";
       row.innerHTML = `
         <td>
            <div class="data-cell">
              <span class="data-main">#${inv.invoice_no}</span>
-             <span class="data-info"><i class='bx bx-calendar'></i> ${inv.invoice_date}</span>
+             <span class="data-info"><i class='bx bx-calendar'></i> ${new Date(inv.invoice_date).toLocaleDateString("ar-EG")}</span>
            </div>
         </td>
         <td>${inv.supplier_name || "—"}</td>
@@ -1604,6 +1724,8 @@ async function loadPurchaseInvoices() {
         <td>
           <div class="row-actions">
             <button class="icon-btn" title="عرض" data-view-id="${inv.id}" data-view-type="purchase_invoice" data-view-title="بيانات الفاتورة"><i class='bx bx-show'></i></button>
+            <button class="icon-btn" title="تعديل" data-edit-purchase="${inv.id}" ${isDraft ? "" : "disabled"}><i class='bx bx-edit-alt'></i></button>
+            <button class="icon-btn" title="حذف" data-delete-purchase="${inv.id}" ${isDraft ? "" : "disabled"}><i class='bx bx-trash'></i></button>
             <button class="icon-btn" title="ترحيل" data-post-purchase="${inv.id}" data-entry-date="${inv.invoice_date}" ${isPosted ? "disabled" : ""}>
               <i class='bx ${isPosted ? "bx-check-circle" : "bx-check-double"}'></i>
             </button>
@@ -1629,8 +1751,39 @@ async function loadPurchaseInvoices() {
           form.querySelector("input[name='invoiceId']").value = id;
           const dateInput = form.querySelector("input[name='entryDate']");
           if (dateInput) dateInput.value = btn.dataset.entryDate || todayISO();
+          const label = $("postPurchaseInvoiceNo");
+          if (label) {
+            const code = btn.closest("tr")?.querySelector(".data-main")?.textContent || "";
+            label.textContent = code ? `#${code.replace("#", "").trim()}` : "";
+          }
           window.openModal("modalPostPurchase");
         }
+      });
+    });
+
+    body.querySelectorAll("[data-edit-purchase]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.editPurchase;
+        if (!id) return;
+        await openPurchaseEdit(id);
+      });
+    });
+
+    body.querySelectorAll("[data-delete-purchase]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.deletePurchase;
+        if (!id) return;
+        openConfirmModal("حذف فاتورة المشتريات؟ سيتم حذف المسودة نهائيًا.", async () => {
+          try {
+            await deleteJSON(`${apiBase}/purchases/invoices/${id}`);
+            toast("تم حذف الفاتورة", "success");
+            await Promise.all([loadPurchaseInvoices(), loadKpis(), loadReports(), loadInventoryReport(), loadInventoryMovements()]);
+          } catch (err) {
+            toast(`تعذر الحذف: ${err.message || err}`, "error");
+          }
+        });
       });
     });
 
@@ -1662,6 +1815,7 @@ async function loadProductionOrders() {
     items.forEach((o) => {
       const row = document.createElement("tr");
       const isDone = o.status === "done";
+      const isPlanned = o.status === "planned";
       row.dataset.status = o.status || "";
       row.innerHTML = `
         <td>${o.order_no}</td>
@@ -1670,7 +1824,9 @@ async function loadProductionOrders() {
         <td>
           <div class="row-actions">
             <button class="icon-btn" title="عرض" data-view-id="${o.id}" data-view-type="production_order" data-view-title="بيانات أمر الإنتاج"><i class='bx bx-show'></i></button>
-            <button class="icon-btn" title="تنفيذ" data-exec-prod="${o.id}" ${isDone ? "disabled" : ""}><i class='bx bx-cog'></i></button>
+            <button class="icon-btn" title="تعديل" data-edit-production="${o.id}" ${isPlanned ? "" : "disabled"}><i class='bx bx-edit-alt'></i></button>
+            <button class="icon-btn" title="حذف" data-delete-production="${o.id}" ${isPlanned ? "" : "disabled"}><i class='bx bx-trash'></i></button>
+            <button class="icon-btn" title="تنفيذ" data-exec-prod="${o.id}" data-order-no="${o.order_no}" ${isDone ? "disabled" : ""}><i class='bx bx-check-double'></i></button>
           </div>
         </td>
       `;
@@ -1692,9 +1848,37 @@ async function loadProductionOrders() {
       btn.addEventListener("click", () => {
         if (btn.disabled) return;
         const id = btn.dataset.execProd;
-        const select = $("executeOrderSelect");
-        if (select) select.value = id;
+        const hidden = $("executeOrderId");
+        const orderNo = $("executeOrderNo");
+        if (hidden) hidden.value = id || "";
+        if (orderNo) orderNo.textContent = btn.dataset.orderNo || "";
         openModal("modalProductionExecute");
+      });
+    });
+
+    body.querySelectorAll("[data-edit-production]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.editProduction;
+        if (!id) return;
+        await openProductionEdit(id);
+      });
+    });
+
+    body.querySelectorAll("[data-delete-production]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        const id = btn.dataset.deleteProduction;
+        if (!id) return;
+        openConfirmModal("حذف أمر الإنتاج؟ سيتم حذف المسودة نهائيًا.", async () => {
+          try {
+            await deleteJSON(`${apiBase}/production/orders/${id}`);
+            toast("تم حذف أمر الإنتاج", "success");
+            await Promise.all([loadProductionOrders(), loadInventoryReport(), loadInventoryMovements(), loadJournal(), loadReports(), loadAlerts(), loadKpis()]);
+          } catch (err) {
+            toast(`تعذر الحذف: ${err.message || err}`, "error");
+          }
+        });
       });
     });
   } catch {
@@ -2470,7 +2654,9 @@ function bindForms() {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(salesForm));
       try {
-        await postJSON(`${apiBase}/sales/invoices`, {
+        const isEdit = salesForm.dataset.mode === "edit";
+        const invoiceId = salesForm.dataset.invoiceId;
+        const payload = {
           invoiceNo: data.invoiceNo,
           customerId: data.customerId || null,
           invoiceDate: data.invoiceDate,
@@ -2483,8 +2669,13 @@ function bindForms() {
               unitPrice: Number(data.unitPrice),
             },
           ],
-        });
-        toast("تم حفظ فاتورة المبيعات", "success");
+        };
+        if (isEdit && invoiceId) {
+          await putJSON(`${apiBase}/sales/invoices/${invoiceId}`, payload);
+        } else {
+          await postJSON(`${apiBase}/sales/invoices`, payload);
+        }
+        toast(isEdit ? "تم تحديث فاتورة المبيعات" : "تم حفظ فاتورة المبيعات", "success");
         salesForm.reset();
         closeModal("modalSalesInvoice");
         await Promise.all([loadSalesInvoices(), loadLatestSales(), loadKpis()]);
@@ -2500,7 +2691,9 @@ function bindForms() {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(purchaseForm));
       try {
-        await postJSON(`${apiBase}/purchases/invoices`, {
+        const isEdit = purchaseForm.dataset.mode === "edit";
+        const invoiceId = purchaseForm.dataset.invoiceId;
+        const payload = {
           invoiceNo: data.invoiceNo,
           supplierId: data.supplierId || null,
           invoiceDate: data.invoiceDate,
@@ -2513,13 +2706,59 @@ function bindForms() {
               unitPrice: Number(data.unitPrice),
             },
           ],
-        });
-        toast("تم حفظ فاتورة المشتريات", "success");
+        };
+        if (isEdit && invoiceId) {
+          await putJSON(`${apiBase}/purchases/invoices/${invoiceId}`, payload);
+        } else {
+          await postJSON(`${apiBase}/purchases/invoices`, payload);
+        }
+        toast(isEdit ? "تم تحديث فاتورة المشتريات" : "تم حفظ فاتورة المشتريات", "success");
         purchaseForm.reset();
         closeModal("modalPurchaseInvoice");
         await Promise.all([loadPurchaseInvoices(), loadKpis()]);
       } catch (err) {
         toast(`تعذر حفظ الفاتورة: ${err.message || err}`, "error");
+      }
+    });
+  }
+
+  const productionForm = $("productionOrderForm");
+  if (productionForm) {
+    productionForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(productionForm));
+      try {
+        const isEdit = productionForm.dataset.mode === "edit";
+        const orderId = productionForm.dataset.orderId;
+        const payload = {
+          orderNo: data.orderNo,
+          productionDate: data.productionDate,
+          notes: data.notes || null,
+          materials: [
+            {
+              itemId: data.materialItemId,
+              qtyUsed: Number(data.materialQty),
+              unitCost: Number(data.materialUnitCost),
+            },
+          ],
+          outputs: [
+            {
+              itemId: data.outputItemId,
+              qtyProduced: Number(data.outputQty),
+            },
+          ],
+        };
+        if (isEdit && orderId) {
+          await putJSON(`${apiBase}/production/orders/${orderId}`, payload);
+        } else {
+          await postJSON(`${apiBase}/production/orders`, payload);
+        }
+        toast(isEdit ? "تم تحديث أمر الإنتاج" : "تم حفظ أمر الإنتاج", "success");
+        productionForm.reset();
+        closeModal("modalProductionOrder");
+        await Promise.all([loadProductionOrders(), loadInventoryReport(), loadInventoryMovements(), loadJournal(), loadReports(), loadAlerts(), loadKpis()]);
+      } catch (err) {
+        toast(`تعذر حفظ أمر الإنتاج: ${err.message || err}`, "error");
       }
     });
   }
@@ -2628,39 +2867,6 @@ function bindForms() {
         await loadWarehouses();
       } catch (err) {
         toast(`تعذر إضافة المخزن: ${err.message || err}`, "error");
-      }
-    });
-  }
-
-  const productionForm = $("productionOrderForm");
-  if (productionForm) {
-    productionForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(productionForm));
-      try {
-        await postJSON(`${apiBase}/production/orders`, {
-          orderNo: data.orderNo,
-          productionDate: data.productionDate,
-          materials: [
-            {
-              itemId: data.materialItemId,
-              qtyUsed: Number(data.materialQty),
-              unitCost: Number(data.materialUnitCost),
-            },
-          ],
-          outputs: [
-            {
-              itemId: data.outputItemId,
-              qtyProduced: Number(data.outputQty),
-            },
-          ],
-        });
-        toast("تم حفظ أمر الإنتاج", "success");
-        productionForm.reset();
-        closeModal("modalProductionOrder");
-        await loadProductionOrders();
-      } catch (err) {
-        toast(`تعذر حفظ أمر الإنتاج: ${err.message || err}`, "error");
       }
     });
   }

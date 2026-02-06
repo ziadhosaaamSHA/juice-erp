@@ -10,6 +10,24 @@ export async function productionRoutes(app: FastifyInstance) {
     return { data: res.rows };
   });
 
+  app.get("/orders/:id", async (req) => {
+    const orderId = (req.params as { id: string }).id;
+    const orderRes = await pool.query(
+      `SELECT * FROM production_orders WHERE id = $1`,
+      [orderId]
+    );
+    if (orderRes.rowCount === 0) throw new Error("Production order not found");
+    const materialsRes = await pool.query(
+      `SELECT * FROM production_materials WHERE production_order_id = $1`,
+      [orderId]
+    );
+    const outputsRes = await pool.query(
+      `SELECT * FROM production_outputs WHERE production_order_id = $1`,
+      [orderId]
+    );
+    return { data: { order: orderRes.rows[0], materials: materialsRes.rows, outputs: outputsRes.rows } };
+  });
+
   app.post("/orders", async (req) => {
     const body = req.body as {
       orderNo: string;
@@ -50,6 +68,99 @@ export async function productionRoutes(app: FastifyInstance) {
     });
 
     return { data: result };
+  });
+
+  app.put("/orders/:id", async (req) => {
+    const orderId = (req.params as { id: string }).id;
+    const body = req.body as {
+      orderNo: string;
+      productionDate: string;
+      notes?: string;
+      materials: { itemId: string; qtyUsed: number; unitCost: number }[];
+      outputs: { itemId: string; qtyProduced: number }[];
+    };
+
+    const result = await withTx(async (client) => {
+      const orderRes = await client.query(
+        `SELECT * FROM production_orders WHERE id = $1`,
+        [orderId]
+      );
+      if (orderRes.rowCount === 0) throw new Error("Production order not found");
+      const order = orderRes.rows[0];
+      if (order.status !== "planned") {
+        throw new Error("Only planned orders can be edited");
+      }
+
+      await client.query(
+        `UPDATE production_orders
+         SET order_no = $1, production_date = $2, notes = $3
+         WHERE id = $4`,
+        [body.orderNo, body.productionDate, body.notes || null, orderId]
+      );
+
+      await client.query(
+        `DELETE FROM production_materials WHERE production_order_id = $1`,
+        [orderId]
+      );
+      await client.query(
+        `DELETE FROM production_outputs WHERE production_order_id = $1`,
+        [orderId]
+      );
+
+      for (const m of body.materials) {
+        await client.query(
+          `INSERT INTO production_materials
+            (production_order_id, item_id, qty_used, unit_cost)
+           VALUES ($1, $2, $3, $4)`,
+          [orderId, m.itemId, m.qtyUsed, m.unitCost]
+        );
+      }
+
+      for (const o of body.outputs) {
+        await client.query(
+          `INSERT INTO production_outputs
+            (production_order_id, item_id, qty_produced, unit_cost)
+           VALUES ($1, $2, $3, 0)`,
+          [orderId, o.itemId, o.qtyProduced]
+        );
+      }
+
+      const updated = await client.query(
+        `SELECT * FROM production_orders WHERE id = $1`,
+        [orderId]
+      );
+      return updated.rows[0];
+    });
+
+    return { data: result };
+  });
+
+  app.delete("/orders/:id", async (req) => {
+    const orderId = (req.params as { id: string }).id;
+    await withTx(async (client) => {
+      const orderRes = await client.query(
+        `SELECT * FROM production_orders WHERE id = $1`,
+        [orderId]
+      );
+      if (orderRes.rowCount === 0) throw new Error("Production order not found");
+      const order = orderRes.rows[0];
+      if (order.status !== "planned") {
+        throw new Error("Only planned orders can be deleted");
+      }
+      await client.query(
+        `DELETE FROM production_materials WHERE production_order_id = $1`,
+        [orderId]
+      );
+      await client.query(
+        `DELETE FROM production_outputs WHERE production_order_id = $1`,
+        [orderId]
+      );
+      await client.query(
+        `DELETE FROM production_orders WHERE id = $1`,
+        [orderId]
+      );
+    });
+    return { ok: true };
   });
 
   app.post("/orders/:id/execute", async (req) => {
