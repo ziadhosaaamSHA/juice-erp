@@ -220,17 +220,20 @@ export async function productionRoutes(app: FastifyInstance) {
         );
       }
 
-      const entryId = await createJournalEntry(
-        client,
-        body.entryDate || order.production_date,
-        `ترحيل أمر إنتاج ${order.order_no}`,
-        "production",
-        orderId,
-        [
-          { accountCode: "1310", debit: totalCost, credit: 0 },
-          { accountCode: "1300", debit: 0, credit: totalCost }
-        ]
-      );
+      let entryId: string | null = null;
+      if (totalCost > 0) {
+        entryId = await createJournalEntry(
+          client,
+          body.entryDate || order.production_date,
+          `ترحيل أمر إنتاج ${order.order_no}`,
+          "production",
+          orderId,
+          [
+            { accountCode: "1310", debit: totalCost, credit: 0 },
+            { accountCode: "1300", debit: 0, credit: totalCost }
+          ]
+        );
+      }
 
       await client.query(
         `UPDATE production_orders SET status = 'done' WHERE id = $1`,

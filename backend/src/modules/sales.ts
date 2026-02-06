@@ -179,6 +179,9 @@ export async function salesRoutes(app: FastifyInstance) {
       if (invoice.status === "posted") {
         throw new Error("Invoice already posted");
       }
+      if (Number(invoice.total_amount) <= 0) {
+        throw new Error("Invoice total must be greater than zero");
+      }
 
       const linesRes = await client.query(
         `SELECT * FROM sales_invoice_items WHERE sales_invoice_id = $1`,

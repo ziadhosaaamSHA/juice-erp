@@ -75,6 +75,9 @@ export async function accountingRoutes(app: FastifyInstance) {
       equityAccountCode?: string;
       note?: string;
     };
+    if (!body.amount || Number(body.amount) <= 0) {
+      throw new Error("Opening amount must be greater than zero");
+    }
     const cashCode = body.cashAccountCode || "1100";
     const equityCode = body.equityAccountCode || "3100";
     const entryId = await withTx((client) =>
